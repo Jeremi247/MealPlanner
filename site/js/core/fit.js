@@ -9,8 +9,27 @@
   var OVERSHOOT = ['protein', 'fat', 'carbs', 'volume', 'kcal'];
   var OVERSHOOT_WEIGHT = { protein: 1, fat: 1, carbs: 1, volume: 0.25, kcal: 1.5 };
 
-  // Below this, a grid's spread is noise and is not stretched to full colour.
-  var MIN_SPREAD = { balance: 0.02, empty: 0.05 };
+  // Raw score at which a tile reaches full green or full red. Fixed, so a colour is
+  // measured against the target and never against the other tiles.
+  var FULL_GOOD = 0.1, FULL_BAD = 0.3;
+
+  // The evenness of a food that covers one dimension only: 1/sqrt(4).
+  var ONE_DIMENSION = 1 / Math.sqrt(BALANCE.length);
+
+  // The five bands a tile's colour is drawn from, best first. A `norm` falls in the
+  // first band whose `min` it reaches.
+  var TIERS = [
+    { id: 'recommended', min: 0.6 },
+    { id: 'alright', min: 0.2 },
+    { id: 'may', min: -0.2 },
+    { id: 'doubtful', min: -0.6 },
+    { id: 'against', min: -Infinity }
+  ];
+
+  function tier(norm) {
+    for (var i = 0; i < TIERS.length; i++) if (norm >= TIERS[i].min) return TIERS[i].id;
+    return TIERS[TIERS.length - 1].id;
+  }
 
   function ratio(x, t) { return t > 0 ? x / t : 0; }
   function clamp01(x) { return x < 0 ? 0 : (x > 1 ? 1 : x); }
@@ -45,10 +64,12 @@
 
     var balance;
     if (regime === 'empty') {
-      // Nothing chosen yet: reward a food for covering the dimensions evenly on its own.
+      // Nothing chosen yet: reward a food for covering the dimensions evenly on its own,
+      // from 0 for one dimension to FULL_GOOD for all four equally.
       var dot = 0, sn = 0;
       BALANCE.forEach(function (d) { dot += share[d]; sn += share[d] * share[d]; });
-      balance = sn > 0 ? dot / (Math.sqrt(sn) * Math.sqrt(BALANCE.length)) : 0;
+      var even = sn > 0 ? dot / (Math.sqrt(sn) * Math.sqrt(BALANCE.length)) : ONE_DIMENSION;
+      balance = (even - ONE_DIMENSION) / (1 - ONE_DIMENSION) * FULL_GOOD;
     } else {
       // Reward what the plate is missing more of than average; penalise what it is ahead on.
       var m = mean(need, BALANCE);
@@ -61,33 +82,18 @@
     return { raw: balance - penalty, balance: balance, penalty: penalty, share: share, need: need, over: over };
   }
 
-  // Scores every food at its default portion and normalises the grid to [-1, 1].
-  // `items` is the plate, [{ food, ml }]. Returns a map from food id to its result.
+  // Scores every food at its default portion and maps each raw score to [-1, 1] on the
+  // fixed scale. `items` is the plate, [{ food, ml }]. Returns a map from food id to its result.
   function rank(foods, items, target) {
     var totals = NM.Nutrition.totals(items);
     var regime = totals.volume > 0 ? 'balance' : 'empty';
     var results = {};
     foods.forEach(function (f) {
-      results[f.id] = scoreOne(totals, NM.Nutrition.amount(f, f.defaultMl), target, regime);
-    });
-
-    // The empty regime's raw score is always positive, so it is centred on the grid.
-    var ids = Object.keys(results);
-    var centre = 0;
-    if (regime === 'empty' && ids.length) {
-      centre = ids.reduce(function (s, id) { return s + results[id].raw; }, 0) / ids.length;
-    }
-    // Each side is scaled by its own extreme, so the best fit is full green and the worst full red.
-    var up = MIN_SPREAD[regime], down = MIN_SPREAD[regime];
-    ids.forEach(function (id) {
-      var c = results[id].raw - centre;
-      if (c > up) up = c;
-      if (-c > down) down = -c;
-    });
-    ids.forEach(function (id) {
-      var r = results[id], c = r.raw - centre;
-      r.norm = c >= 0 ? Math.min(1, c / up) : Math.max(-1, c / down);
+      var r = scoreOne(totals, NM.Nutrition.amount(f, f.defaultMl), target, regime);
+      r.norm = r.raw >= 0 ? Math.min(1, r.raw / FULL_GOOD) : Math.max(-1, r.raw / FULL_BAD);
+      r.tier = tier(r.norm);
       r.regime = regime;
+      results[f.id] = r;
     });
     return { results: results, totals: totals, regime: regime, need: needs(totals, target) };
   }
@@ -100,5 +106,42 @@
     });
   }
 
-  NM.Fit = { BALANCE: BALANCE, OVERSHOOT_WEIGHT: OVERSHOOT_WEIGHT, needs: needs, scoreOne: scoreOne, rank: rank, mostMissing: mostMissing };
+  // One dimension's part of a raw score: its balance term less the overshoot it adds.
+  function parts(r) {
+    var m = mean(r.need, BALANCE), out = {};
+    OVERSHOOT.forEach(function (d) {
+      var bal = BALANCE.indexOf(d) >= 0 ? r.share[d] * (r.need[d] - m) : 0;
+      out[d] = { bal: bal, over: OVERSHOOT_WEIGHT[d] * r.over[d] };
+    });
+    return out;
+  }
+
+  // Which foods changed band between two `rank` results, and the dimension that moved
+  // each most. Returns a map from food id to { dir: 'up'|'down', dim, kind: 'balance'|'over' }.
+  // A change into or out of the empty regime is a different measure, and reports nothing.
+  function compare(before, after) {
+    var out = {};
+    if (!before || before.regime !== 'balance' || after.regime !== 'balance') return out;
+    var order = TIERS.map(function (t) { return t.id; });
+    Object.keys(after.results).forEach(function (id) {
+      var a = after.results[id], b = before.results[id];
+      if (!b || a.tier === b.tier) return;
+      var dir = order.indexOf(a.tier) < order.indexOf(b.tier) ? 'up' : 'down';
+      var pa = parts(a), pb = parts(b), best = null;
+      OVERSHOOT.forEach(function (d) {
+        var dBal = pa[d].bal - pb[d].bal, dOver = pa[d].over - pb[d].over, delta = dBal - dOver;
+        var score = dir === 'up' ? delta : -delta;
+        if (!best || score > best.score) {
+          best = { score: score, dim: d, kind: Math.abs(dOver) > Math.abs(dBal) ? 'over' : 'balance' };
+        }
+      });
+      out[id] = { dir: dir, dim: best.dim, kind: best.kind };
+    });
+    return out;
+  }
+
+  NM.Fit = {
+    BALANCE: BALANCE, OVERSHOOT_WEIGHT: OVERSHOOT_WEIGHT, TIERS: TIERS, tier: tier, needs: needs,
+    scoreOne: scoreOne, rank: rank, mostMissing: mostMissing, compare: compare
+  };
 })(window.NM = window.NM || {});

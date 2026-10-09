@@ -19,9 +19,9 @@ Either can be run on its own. Before calling a change done, run the gate and ope
 
 | File | Holds |
 |---|---|
-| `Tests/data.test.js` | Every row of Jeremi's table is present once, reproduces the table's own kcal comparison column, keeps the macros the table gives, and respects its category's limits; estimated macros roughly account for the listed kcal |
-| `Tests/nutrition.test.js` | Ranges at midpoint, portions spread over their volume, the table's own starch portion examples, plate sums |
-| `Tests/fit.test.js` | The specifying example, overshoot, per-side normalisation, the empty regime |
+| `Tests/data.test.js` | Every row of Jeremi's table is present once, reproduces the table's own kcal comparison column, keeps the macros the table gives, and respects its category's limits; estimated macros roughly account for the listed kcal; every row has a marked, plausible weight |
+| `Tests/nutrition.test.js` | Ranges at midpoint, portions spread over their volume, the table's own starch portion examples, plate sums, weight scaling with volume, a typed weight's volume |
+| `Tests/fit.test.js` | The specifying example, overshoot, the fixed colour scale, the five bands, band changes between picks, a nearly-met plate, the empty regime |
 | `Tests/store.test.js` | Unavailable and malformed storage both fall back to defaults |
 
 A new test file is added to `Tests/index.html` below the scripts it uses. A script that throws while loading fails the run by name, since its tests never register.

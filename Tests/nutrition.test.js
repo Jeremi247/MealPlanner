@@ -35,6 +35,18 @@
     T.near(t.fat, 14 + 0.3, 1e-9, 'fat');
   });
 
+  T.test('Nutrition.AWeightTypedInBecomesTheVolumeItFills', function () {
+    T.near(N.mlFromGrams(food('oil'), 14), 15, 1e-9, 'one oil portion by weight');
+    var b = food('broccoli');
+    T.near(N.grams(b, N.mlFromGrams(b, 100)), 100, 1e-9, 'broccoli round trip');
+  });
+
+  T.test('Nutrition.WeightScalesWithVolume', function () {
+    T.near(N.grams(food('oil'), 15), 14, 1e-9, 'one oil portion');
+    T.near(N.grams(food('oil'), 7.5), 7, 1e-9, 'half an oil portion');
+    T.near(N.grams(food('broccoli'), 250), 95, 1e-9, 'broccoli 250 ml');
+  });
+
   T.test('Nutrition.DensityIsVolumePer100Kcal', function () {
     T.near(N.mlPer100Kcal(food('cucumber').perMl.kcal), 100 / 0.07, 1e-6, 'cucumber');
     T.eq(N.mlPer100Kcal(0), Infinity, 'zero-kcal food');

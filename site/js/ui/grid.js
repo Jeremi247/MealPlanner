@@ -5,12 +5,10 @@
   var F = NM.Format;
   var el = F.el;
 
-  // Strongest tint a tile reaches at |fit| = 1, in percent of the fit colour.
-  var MAX_TINT = 58;
-
   var SORTS = {
     table: function (a, b) { return a.order - b.order; },
-    fit: function (a, b, r) { return r[b.id].norm - r[a.id].norm; },
+    // By raw score: `norm` is clamped at full colour, so many tiles tie at ±1.
+    fit: function (a, b, r) { return r[b.id].raw - r[a.id].raw; },
     density: function (a, b) { return NM.Nutrition.mlPer100Kcal(b.perMl.kcal) - NM.Nutrition.mlPer100Kcal(a.perMl.kcal); },
     name: function (a, b) { return a.name.localeCompare(b.name); }
   };
@@ -37,6 +35,15 @@
       if (r.over[d] > 0.005) out.push({ good: false, w: r.over[d] * 2, text: 'pushes ' + F.LABEL[d].toLowerCase() + ' ' + Math.round(r.over[d] * 100) + '% over target' });
     });
     return out.sort(function (a, b) { return b.w - a.w; }).slice(0, 3);
+  }
+
+  // Why a tile moved band with the last change to the plate or target. `c` is from Fit.compare.
+  function changeText(c) {
+    var label = F.LABEL[c.dim].toLowerCase();
+    if (c.kind === 'over') return c.dir === 'up' ? 'Moved up: pushes ' + label + ' less far over target now' : 'Moved down: would now push ' + label + ' over target';
+    return c.dir === 'up'
+      ? 'Moved up: the plate is now further behind on ' + label
+      : 'Moved down: the plate is now further ahead on ' + label;
   }
 
   function macroLine(food) {
@@ -68,20 +75,30 @@
     return bar;
   }
 
-  function tile(food, r, inPlateMl, onAdd) {
+  function weight(food, ml) {
+    var w = el('span', 'tile-weight', F.grams(NM.Nutrition.grams(food, ml)));
+    w.title = F.GRAMS_TITLE;
+    return w;
+  }
+
+  function tile(food, r, change, inPlateMl, onAdd) {
     var t = el('button', 'tile');
     t.type = 'button';
     if (food.reference) t.classList.add('is-reference');
     if (inPlateMl) t.classList.add('is-on-plate');
-    var g = Math.max(0, r.norm) * MAX_TINT, b = Math.max(0, -r.norm) * MAX_TINT;
-    t.style.setProperty('--good-amt', g.toFixed(1) + '%');
-    t.style.setProperty('--bad-amt', b.toFixed(1) + '%');
+    t.classList.add('fit-' + r.tier);
     t.dataset.fit = r.norm.toFixed(2);
     t.dataset.id = food.id;
     t.dataset.focus = 'tile:' + food.id;
 
     var head = el('div', 'tile-head');
-    head.appendChild(el('span', 'tile-name', food.name + (food.reference ? ' †' : '')));
+    var name = el('span', 'tile-name', food.name + (food.reference ? ' †' : ''));
+    if (change) {
+      var arrow = el('span', 'tile-change tile-change-' + change.dir, change.dir === 'up' ? '↑' : '↓');
+      arrow.title = changeText(change);
+      name.appendChild(arrow);
+    }
+    head.appendChild(name);
     var density = NM.Nutrition.mlPer100Kcal(food.perMl.kcal);
     var d = el('span', 'tile-density');
     d.appendChild(el('b', null, F.num(density, 0)));
@@ -104,21 +121,29 @@
     t.appendChild(splitBar(food));
 
     var foot = el('div', 'tile-foot');
-    foot.appendChild(el('span', 'tile-add', '+ ' + (food.portion ? '1 portion' : F.num(food.defaultMl) + ' ml')));
-    if (inPlateMl) foot.appendChild(el('span', 'tile-onplate', 'on plate: ' + F.num(inPlateMl) + ' ml'));
+    var add = el('span', 'tile-add', '+ ' + (food.portion ? '1 portion' : F.num(food.defaultMl) + ' ml') + ' ');
+    add.appendChild(weight(food, food.defaultMl));
+    foot.appendChild(add);
+    if (inPlateMl) {
+      var on = el('span', 'tile-onplate', 'on plate: ' + F.num(inPlateMl) + ' ml ');
+      on.appendChild(weight(food, inPlateMl));
+      foot.appendChild(on);
+    }
     t.appendChild(foot);
 
     var why = reasons(food, r);
     var ul = el('ul', 'tile-why');
+    ul.appendChild(el('li', 'why-tier', F.TIER_LABEL[r.tier]));
+    if (change) ul.appendChild(el('li', 'why-change why-' + (change.dir === 'up' ? 'good' : 'bad'), changeText(change)));
     why.forEach(function (w) { ul.appendChild(el('li', w.good ? 'why-good' : 'why-bad', w.text)); });
-    if (why.length) t.appendChild(ul);
+    t.appendChild(ul);
 
-    t.setAttribute('aria-label', 'Add ' + food.name + '. Fit ' + Math.round(r.norm * 100) + '. ' + why.map(function (w) { return w.text; }).join('; '));
+    t.setAttribute('aria-label', 'Add ' + food.name + '. ' + F.TIER_LABEL[r.tier] + '. ' + (change ? changeText(change) + '. ' : '') + why.map(function (w) { return w.text; }).join('; '));
     t.addEventListener('click', function () { onAdd(food); });
     return t;
   }
 
-  // `ctx`: { categories, foods, ranked, plateMl (id → ml), view, onAdd }.
+  // `ctx`: { categories, foods, ranked, changes (id → Fit.compare entry), plateMl (id → ml), view, onAdd }.
   function render(root, ctx) {
     root.textContent = '';
     var q = ctx.view.query.trim().toLowerCase();
@@ -141,7 +166,7 @@
       h.appendChild(el('p', 'cat-note', cat.note));
       sec.appendChild(h);
       var grid = el('div', 'grid');
-      foods.forEach(function (f) { grid.appendChild(tile(f, ctx.ranked.results[f.id], ctx.plateMl[f.id] || 0, ctx.onAdd)); });
+      foods.forEach(function (f) { grid.appendChild(tile(f, ctx.ranked.results[f.id], ctx.changes[f.id], ctx.plateMl[f.id] || 0, ctx.onAdd)); });
       sec.appendChild(grid);
       root.appendChild(sec);
     });

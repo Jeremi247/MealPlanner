@@ -32,14 +32,56 @@
     T.eq(r['oil'].norm, -1, 'the worst overshoot is full red');
   });
 
-  T.test('Fit.ScoresAreNormalisedToTheGridOnEachSide', function () {
+  // A tile's colour depends on the plate and the target only, never on which other tiles are shown.
+  T.test('Fit.ColourIsMeasuredAgainstTheTargetNotTheGrid', function () {
     [[], plate([['peanut-butter', 15]]), plate([['chicken-breast', 150], ['broccoli', 250]])].forEach(function (p) {
-      var res = NM.Fit.rank(foods, p, target).results;
-      var norms = Object.keys(res).map(function (id) { return res[id].norm; });
-      norms.forEach(function (n) { T.ok(n >= -1 && n <= 1, 'norm in range: ' + n); });
-      T.eq(Math.max.apply(null, norms), 1, 'the best fit is full green');
-      T.eq(Math.min.apply(null, norms), -1, 'the worst fit is full red');
+      var all = NM.Fit.rank(foods, p, target).results;
+      foods.forEach(function (f) {
+        T.ok(all[f.id].norm >= -1 && all[f.id].norm <= 1, f.id + ' norm in range: ' + all[f.id].norm);
+        T.near(NM.Fit.rank([f], p, target).results[f.id].norm, all[f.id].norm, 1e-12, f.id + ' scored alone');
+      });
     });
+  });
+
+  T.test('Fit.APlateWithEveryTargetNearlyMetHasNoGreenTile', function () {
+    var p = plate([['chicken-breast', 150], ['broccoli', 250], ['potatoes', 250], ['oil', 15]]);
+    var r = NM.Fit.rank(foods, p, target).results;
+    foods.forEach(function (f) { T.ok(r[f.id].norm < 0, f.id + ' should be red, is ' + r[f.id].norm); });
+  });
+
+  T.test('Fit.OnAnEmptyPlateOnlyAnOvershootIsRed', function () {
+    var r = NM.Fit.rank(foods, [], target).results;
+    foods.forEach(function (f) {
+      if (r[f.id].penalty === 0) T.ok(r[f.id].norm >= 0, f.id + ' overshoots nothing, is ' + r[f.id].norm);
+    });
+    var huge = NM.Fit.rank(foods, [], { kcal: 50, protein: 45, fat: 20, carbs: 55, volume: 750 }).results;
+    T.ok(huge['oil'].norm < 0, 'oil past a 50 kcal budget is red');
+  });
+
+  T.test('Fit.EachScoreFallsInOneOfFiveBands', function () {
+    T.eq(NM.Fit.tier(1), 'recommended', 'full green');
+    T.eq(NM.Fit.tier(0.6), 'recommended', 'a boundary belongs to the band above');
+    T.eq(NM.Fit.tier(0.4), 'alright', 'light green');
+    T.eq(NM.Fit.tier(0), 'may', 'neutral');
+    T.eq(NM.Fit.tier(-0.4), 'doubtful', 'orange');
+    T.eq(NM.Fit.tier(-1), 'against', 'full red');
+    var r = NM.Fit.rank(foods, plate([['peanut-butter', 15]]), target).results;
+    T.eq(r['oil'].tier, 'against', 'oil after peanut butter');
+    T.eq(r['lentils'].tier, 'recommended', 'lentils after peanut butter');
+  });
+
+  // A tile can move up a band after a green pick: the rule compares each dimension with the rest.
+  T.test('Fit.CompareNamesTheBandChangeAndTheDimensionThatMovedIt', function () {
+    function rk(pairs) { return NM.Fit.rank(foods, plate(pairs), target); }
+    var chicken = rk([['chicken-breast', 150]]);
+    var up = NM.Fit.compare(chicken, rk([['chicken-breast', 150], ['lentils', 150]]))['almonds'] || {};
+    T.eq(up.dir, 'up', 'almonds move up once protein and carbs are in');
+    T.eq(up.dim, 'fat', 'because fat is now furthest behind');
+    var down = NM.Fit.compare(chicken, rk([['chicken-breast', 150], ['potatoes', 150]]))['potatoes'] || {};
+    T.eq(down.dir, 'down', 'more potatoes move down after potatoes');
+    T.eq(down.dim, 'carbs', 'because carbs caught up');
+    T.eq(Object.keys(NM.Fit.compare(rk([]), chicken)).length, 0, 'leaving the empty plate reports nothing');
+    T.eq(Object.keys(NM.Fit.compare(chicken, chicken)).length, 0, 'no change reports nothing');
   });
 
   T.test('Fit.MostMissingIsOrderedByNeed', function () {

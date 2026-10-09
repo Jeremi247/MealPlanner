@@ -8,7 +8,6 @@
 - One click adds 150 ml of a protein or starch, 250 ml of a volume food, one fat portion. Right sizes?
 - Fat portions step by half a portion. Should they be entered in ml like the rest, or in portions?
 - The counted-item portion volumes are estimates: 20 almonds ≈ 40 ml, 20 olives ≈ 100 ml, ½ avocado ≈ 100 ml, 2 eggs ≈ 100 ml, 7 walnut halves ≈ 30 ml, 25 pistachios ≈ 20 ml, 9 cashews ≈ 25 ml.
-- Is a colour scale relative to the grid (now) what was meant, or should full green mean "this would complete the plate"?
 - A target of 0 is allowed, and today it makes that dimension read 100 % missing for ever and never overshoot, which skews every other score. Should 0 drop the dimension from balance, or penalise any amount of it?
 - Boiled potatoes and white rice carry protein and fat with no `est` mark, but [food data](../../subsystems/food-data.md) says the table gives only kcal and carbs for starch. Does the table give them? If not, they are estimates to mark.
 

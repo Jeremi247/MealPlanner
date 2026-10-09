@@ -12,6 +12,7 @@ Scope: `site/js/data/foods.js` and the normalisation in `site/js/core/nutrition.
 | `est` | The fields not taken from the table ([0004](../decisions/0004-estimates-are-marked-not-hidden.md)) |
 | `reference` | The table's † rows: listed for comparison, outside the category's limit |
 | `portion`, `portionMl` | Fat portions only: the portion as listed, and the volume it fills |
+| `grams` | The weight of the row's basis, always estimated ([0007](../decisions/0007-weight-is-shown-as-an-estimate.md)). Normalised to `gPerMl`; shown, and converts a typed weight to ml; never summed or scored |
 
 **Per 100 ml** for the protein, volume and starch categories; **per portion** for fat. The category's `basis` says which.
 
@@ -29,6 +30,7 @@ Scope: `site/js/data/foods.js` and the normalisation in `site/js/core/nutrition.
 - **Protein and fat** — the table, for protein foods and fat portions.
 - **Carbs** — the table only for the starch rows. Elsewhere estimated from per-100 g references and the row's own kcal-per-ml density. Fibre is counted in carbs.
 - **Protein, fat and carbs of volume foods** — estimated the same way; the table lists only their kcal.
+- **`grams`** — estimated for every row, by the method in [0007](../decisions/0007-weight-is-shown-as-an-estimate.md#how-a-weight-is-made).
 - **`portionMl`** — measured spoon volumes for tbsp portions; estimated for counted items (almonds, olives, eggs).
 
 `Data.MacrosRoughlyAccountForTheListedKcal` holds every row's macros to its kcal within a tolerance, which catches a typo but not a careful wrong estimate. Checking the estimates against a source is [P1](../todo/P1/verify-estimated-macros.md).

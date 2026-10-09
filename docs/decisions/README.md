@@ -4,9 +4,12 @@ Scope: one line per decision — what was decided, and which record to trust whe
 
 Append-only in substance: a reversal is a new record superseding the old one, never an edit.
 
-- [0001 — A plate is measured in millilitres](0001-a-plate-is-measured-in-millilitres.md)
+- [0001 — A plate is measured in millilitres](0001-a-plate-is-measured-in-millilitres.md) — superseded in part by 0007: a weight is now shown
 - [0002 — No build step and no dependencies](0002-no-build-step-and-no-dependencies.md)
-- [0003 — Fit is scored against what the plate lacks](0003-fit-is-scored-against-what-the-plate-lacks.md)
+- [0003 — Fit is scored against what the plate lacks](0003-fit-is-scored-against-what-the-plate-lacks.md) — superseded in part by 0009: the scale is no longer the grid's
 - [0004 — Estimates are marked, not hidden](0004-estimates-are-marked-not-hidden.md)
 - [0005 — State lives in the browser](0005-state-lives-in-the-browser.md) — a recorded shortcut, with its trigger
 - [0006 — The test gate is a headless browser](0006-the-test-gate-is-a-headless-browser.md)
+- [0007 — Weight is shown as an estimate](0007-weight-is-shown-as-an-estimate.md) — supersedes 0001's "no weight is shown"; superseded in part by 0008
+- [0008 — A weight can be typed in, and is stored as ml](0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md) — supersedes 0007's "never typed in"
+- [0009 — Colour is measured against the target](0009-colour-is-measured-against-the-target.md) — supersedes 0003's per-side normalisation

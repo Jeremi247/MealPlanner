@@ -23,7 +23,7 @@ A static site in `site/`, served by Python's `http.server` from `Serve.bat`, wit
 
 1. A tile click adds the food's default portion in ml to `state.plate`.
 2. `app.js` saves the state, then calls `NM.Fit.rank(foods, plate, target)`.
-3. `rank` sums the plate, scores every food's default portion against it, and normalises the grid to −1…1.
+3. `rank` sums the plate, scores every food's default portion against it, and maps each score to −1…1 on a fixed scale.
 4. `Grid.render` and `Plate.render` rebuild their roots from the result.
 
 There is no incremental update. The grid is ~66 tiles and a full rebuild is below a frame.

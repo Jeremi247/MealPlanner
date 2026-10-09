@@ -38,6 +38,10 @@
     setTimeout(function () { pending = false; render(); }, 0);
   }
 
+  // The ranking from before the latest change to the plate or target, kept until the next
+  // one, so a tile that moved band says so however often the view re-renders.
+  var lastKey = null, lastRanked = null, before = null;
+
   // A render replaces every control, so the one that had focus is found again by its
   // `data-focus` key. A control whose row is gone leaves focus where the browser puts it.
   function render() {
@@ -46,11 +50,14 @@
     NM.Store.save(state);
     var its = items();
     var ranked = NM.Fit.rank(foods, its, state.target);
+    var key = JSON.stringify([state.plate, state.target]);
+    if (key !== lastKey) { before = lastRanked; lastKey = key; }
+    lastRanked = ranked;
     var plateMl = {};
     state.plate.forEach(function (p) { plateMl[p.id] = p.ml; });
 
     NM.Grid.render(gridRoot, {
-      categories: NM.categories, foods: foods, ranked: ranked, plateMl: plateMl,
+      categories: NM.categories, foods: foods, ranked: ranked, changes: NM.Fit.compare(before, ranked), plateMl: plateMl,
       view: state.view, onAdd: addPortion
     });
     NM.Plate.render(plateRoot, {

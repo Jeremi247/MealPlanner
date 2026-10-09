@@ -117,6 +117,22 @@
     ctl.appendChild(minus); ctl.appendChild(input); ctl.appendChild(el('span', 'unit', 'ml')); ctl.appendChild(plus);
     row.appendChild(ctl);
 
+    // A weight typed here becomes ml at once; only the ml is kept.
+    var w = el('label', 'item-weight');
+    w.title = F.GRAMS_TITLE;
+    w.appendChild(el('span', null, '~'));
+    var g = el('input', 'item-g');
+    g.type = 'number'; g.min = '0'; g.step = '1'; g.value = F.num(NM.Nutrition.grams(food, ml), 0);
+    g.setAttribute('aria-label', food.name + ' in grams, estimated');
+    g.dataset.focus = 'g:' + food.id;
+    g.addEventListener('change', function () {
+      var v = parseFloat(g.value);
+      onSet(food, isFinite(v) && v >= 0 ? NM.Nutrition.mlFromGrams(food, v) : ml);
+    });
+    w.appendChild(g);
+    w.appendChild(el('span', null, 'g'));
+    row.appendChild(w);
+
     row.appendChild(el('div', 'item-nums',
       F.num(a.kcal, 0) + ' kcal · P ' + F.num(a.protein) + ' · F ' + F.num(a.fat) + ' · C ' + F.num(a.carbs)));
 

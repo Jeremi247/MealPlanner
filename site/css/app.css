@@ -8,6 +8,8 @@
   --accent: #2f6f62;
   --good: #2e9e5b;
   --bad: #d4483b;
+  --caution: #eda12f;
+  --fair: #a9c23a;
   --protein: #3d7dd8;
   --fat: #e0a331;
   --carbs: #9a6fd0;
@@ -29,6 +31,8 @@
     --accent: #6cc3ad;
     --good: #3fbf73;
     --bad: #ee6152;
+    --caution: #f5b53d;
+    --fair: #b9d14e;
     --protein: #6fa3ee;
     --fat: #f0b950;
     --carbs: #b694e6;
@@ -70,10 +74,10 @@ button, input, select { font: inherit; color: inherit; }
   display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center;
   padding: 0 24px 14px; color: var(--muted); font-size: 13px;
 }
+.legend-key { display: flex; align-items: center; gap: 6px; font-size: 12px; }
 .legend-scale {
-  width: 120px; height: 10px; border-radius: 5px;
-  background: linear-gradient(90deg, var(--bad), var(--surface-2) 50%, var(--good));
-  border: 1px solid var(--line);
+  width: 160px; height: 10px; border-radius: 5px; border: 1px solid var(--line);
+  background: linear-gradient(90deg, var(--fit-against) 8%, var(--fit-doubtful) 30%, var(--fit-may) 50%, var(--fit-alright) 70%, var(--fit-recommended) 92%);
 }
 .legend b { color: var(--text); font-weight: 600; }
 .legend-regime { font-style: italic; }
@@ -108,12 +112,25 @@ button, input, select { font: inherit; color: inherit; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
 
+/* The five fit bands (site/js/core/fit.js TIERS), worst to best. Tiles and the legend read them. */
+:root {
+  --fit-against: color-mix(in oklab, var(--bad) 58%, var(--tile));
+  --fit-doubtful: color-mix(in oklab, var(--caution) 45%, var(--tile));
+  --fit-may: color-mix(in oklab, var(--fair) 42%, var(--tile));
+  --fit-alright: color-mix(in oklab, var(--good) 34%, var(--tile));
+  --fit-recommended: color-mix(in oklab, var(--good) 64%, var(--tile));
+}
+.fit-against { --fit-bg: var(--fit-against); }
+.fit-doubtful { --fit-bg: var(--fit-doubtful); }
+.fit-may { --fit-bg: var(--fit-may); }
+.fit-alright { --fit-bg: var(--fit-alright); }
+.fit-recommended { --fit-bg: var(--fit-recommended); }
+
 .tile {
-  --good-amt: 0%; --bad-amt: 0%;
   position: relative; display: flex; flex-direction: column; gap: 4px; text-align: left;
   padding: 10px 12px; border-radius: 10px; cursor: pointer;
   border: 1px solid var(--line); box-shadow: var(--shadow);
-  background: color-mix(in oklab, var(--good) var(--good-amt), color-mix(in oklab, var(--bad) var(--bad-amt), var(--tile)));
+  background: var(--fit-bg, var(--tile));
   transition: transform .08s ease, border-color .15s ease, background-color .2s ease;
 }
 .tile:hover { transform: translateY(-1px); border-color: var(--accent); }
@@ -141,9 +158,10 @@ button, input, select { font: inherit; color: inherit; }
 .split-fat { background: var(--fat); }
 .split-carbs { background: var(--carbs); }
 
-.tile-foot { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; margin-top: 2px; }
+.tile-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 6px; font-size: 12px; margin-top: 2px; }
 .tile-add { color: var(--accent); font-weight: 600; }
 .tile-onplate { color: var(--muted); }
+.tile-weight { color: var(--muted); font-weight: 400; }
 
 .tile-why {
   list-style: none; margin: 0; padding: 6px 10px; font-size: 11.5px; display: none;
@@ -153,6 +171,11 @@ button, input, select { font: inherit; color: inherit; }
 .tile:hover, .tile:focus-visible { z-index: 4; }
 .tile:hover .tile-why, .tile:focus-visible .tile-why { display: block; }
 .tile-why li::before { content: "● "; }
+.tile-why .why-tier { font-weight: 600; }
+.tile-why .why-tier::before { content: none; }
+.tile-change { margin-left: 5px; padding: 0 5px; border-radius: 4px; color: var(--surface); font-size: 12px; font-weight: 700; }
+.tile-change-up { background: var(--good); }
+.tile-change-down { background: var(--bad); }
 .why-good::before { color: var(--good); }
 .why-bad::before { color: var(--bad); }
 
@@ -193,7 +216,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .item {
-  display: grid; grid-template-columns: 1fr auto auto; grid-template-areas: "name ctl rm" "nums nums nums";
+  display: grid; grid-template-columns: 1fr auto auto; grid-template-areas: "name ctl rm" "name weight rm" "nums nums nums";
   gap: 4px 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line);
 }
 .item:first-child { border-top: 0; }
@@ -202,6 +225,11 @@ button, input, select { font: inherit; color: inherit; }
 .item-name small { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item-ctl { grid-area: ctl; display: flex; align-items: center; gap: 2px; }
 .item-ml { width: 58px; text-align: right; padding: 3px 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+.item-weight { grid-area: weight; display: flex; align-items: center; justify-content: center; gap: 2px; color: var(--muted); font-size: 11px; }
+.item-g {
+  width: 50px; text-align: right; padding: 1px 4px; font-size: 11px; font-variant-numeric: tabular-nums;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--muted);
+}
 .unit { color: var(--muted); font-size: 12px; margin-right: 2px; }
 .step, .item-rm { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface-2); cursor: pointer; line-height: 1; }
 .step:hover, .item-rm:hover { border-color: var(--accent); }

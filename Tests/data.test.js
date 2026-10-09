@@ -77,10 +77,19 @@
   });
 
   T.test('Data.EstimatesNameRealFields', function () {
-    var allowed = ['kcal', 'protein', 'fat', 'carbs', 'portionMl'];
+    var allowed = ['kcal', 'protein', 'fat', 'carbs', 'portionMl', 'grams'];
     foods.forEach(function (f) {
       f.est.forEach(function (k) { T.ok(allowed.indexOf(k) >= 0, f.id + ' estimates unknown field ' + k); });
       T.ok(f.est.indexOf('kcal') < 0, f.id + ': kcal always comes from the table');
+    });
+  });
+
+  // The table gives no weights. A density outside what any food on the list can have is
+  // a typo, or a per-100 ml value entered on a per-portion row.
+  T.test('Data.EveryRowHasAPlausibleEstimatedWeight', function () {
+    foods.forEach(function (f) {
+      T.ok(f.est.indexOf('grams') >= 0, f.id + ': weight is an estimate, so marked as one');
+      T.ok(f.gPerMl >= 0.05 && f.gPerMl <= 1.2, f.id + ': ' + f.gPerMl + ' g per ml');
     });
   });
 

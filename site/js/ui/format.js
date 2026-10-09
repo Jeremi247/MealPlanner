@@ -3,6 +3,10 @@
   'use strict';
 
   var LABEL = { protein: 'Protein', fat: 'Fat', carbs: 'Carbs', volume: 'Volume', kcal: 'kcal' };
+  var TIER_LABEL = {
+    recommended: 'Recommended', alright: 'Alright to add', may: 'You may add it',
+    doubtful: 'Might not be the best idea, but sure', against: 'Recommended against adding it'
+  };
   var UNIT = { protein: 'g', fat: 'g', carbs: 'g', volume: 'ml', kcal: 'kcal' };
 
   function num(x, digits) {
@@ -24,6 +28,10 @@
     return (p > 0 ? '+' : p < 0 ? '−' : '') + Math.abs(p) + '%';
   }
 
+  // An estimated weight of food, marked as an estimate (docs/decisions/0004-estimates-are-marked-not-hidden.md).
+  var GRAMS_TITLE = 'Estimated weight — not from the reference table';
+  function grams(g) { return '~' + num(g, 0) + ' g'; }
+
   function el(tag, cls, text) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -31,5 +39,5 @@
     return e;
   }
 
-  NM.Format = { LABEL: LABEL, UNIT: UNIT, num: num, listed: listed, percent: percent, el: el };
+  NM.Format = { LABEL: LABEL, TIER_LABEL: TIER_LABEL, UNIT: UNIT, num: num, listed: listed, percent: percent, grams: grams, GRAMS_TITLE: GRAMS_TITLE, el: el };
 })(window.NM = window.NM || {});

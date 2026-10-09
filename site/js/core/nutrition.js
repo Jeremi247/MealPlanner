@@ -1,6 +1,8 @@
 // Turns the food table into per-millilitre records, and sums a plate.
-// Every quantity downstream of here is per ml or in ml; grams of food never appear
-// (docs/architecture/critical-assumptions.md).
+// Every quantity downstream of here is per ml or in ml. The one weight of food is
+// `gPerMl`, an estimate for display and for typing a weight in, that nothing stores,
+// sums or scores (docs/decisions/0007-weight-is-shown-as-an-estimate.md,
+// docs/decisions/0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md).
 (function (NM) {
   'use strict';
 
@@ -22,6 +24,7 @@
           prep: f.prep || '', portion: f.portion || null, portionMl: f.portionMl || null,
           reference: !!f.reference, est: f.est || [],
           perMl: {}, range: {}, listed: {},
+          gPerMl: f.grams / basisMl,
           defaultMl: perPortion ? f.portionMl : cat.defaultMl,
           stepMl: perPortion ? f.portionMl / 2 : cat.stepMl,
           baseline: cat.baseline
@@ -44,6 +47,12 @@
     NUTRIENTS.forEach(function (n) { a[n] = food.perMl[n] * ml; });
     return a;
   }
+
+  // Estimated weight of `ml` of a food, in grams.
+  function grams(food, ml) { return food.gPerMl * ml; }
+
+  // The volume an estimated weight of a food fills: the inverse of `grams`.
+  function mlFromGrams(food, g) { return g / food.gPerMl; }
 
   function zero() { return { volume: 0, kcal: 0, protein: 0, fat: 0, carbs: 0 }; }
 
@@ -75,7 +84,7 @@
   }
 
   NM.Nutrition = {
-    NUTRIENTS: NUTRIENTS, mid: mid, normalise: normalise, amount: amount, zero: zero, add: add,
+    NUTRIENTS: NUTRIENTS, mid: mid, normalise: normalise, amount: amount, grams: grams, mlFromGrams: mlFromGrams, zero: zero, add: add,
     totals: totals, mlPer100Kcal: mlPer100Kcal, macroKcalSplit: macroKcalSplit, vsBaseline: vsBaseline
   };
 })(window.NM = window.NM || {});

@@ -4,9 +4,9 @@ Scope: the premises every change is checked against, whatever part of the app it
 
 ## Volume, not weight
 
-Every amount the app shows or stores is millilitres of the food **as prepared** — loosely filled, drained, chopped as the table's preparation column says ([0001](../decisions/0001-a-plate-is-measured-in-millilitres.md)). Grams of food never appear. Grams of a *nutrient* do.
+Every amount the app enters, stores, sums or scores is millilitres of the food **as prepared** — loosely filled, drained, chopped as the table's preparation column says ([0001](../decisions/0001-a-plate-is-measured-in-millilitres.md)). Grams of food appear only as a marked estimate beside a volume ([0007](../decisions/0007-weight-is-shown-as-an-estimate.md)). A weight typed into a plate row is turned into millilitres at once ([0008](../decisions/0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md)). Grams of a *nutrient* are real values.
 
-**A change has ignored it when it introduces a weight**, or treats two preparations of one food as the same volume. Raw loose spinach and cooked spinach are two rows, not one row and a conversion.
+**A change has ignored it when a weight is stored, totalled or scored, or entered other than as a stand-in for ml**, or when it treats two preparations of one food as the same volume. Raw loose spinach and cooked spinach are two rows, not one row and a conversion.
 
 Fat portions are listed per portion (1 tbsp, 20 almonds) because that is how they are measured in a kitchen. Each still carries the volume one portion fills, so the plate's volume total includes them.
 
