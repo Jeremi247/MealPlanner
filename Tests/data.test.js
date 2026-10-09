@@ -103,4 +103,26 @@
       T.ok(fromMacros * per <= kcal * per * 1.6 + 3, f.id + ': macros give ' + (fromMacros * per).toFixed(1) + ' kcal of ' + (kcal * per).toFixed(1));
     });
   });
+  T.test('Data.EveryFoodHasAnIconAndEveryIconAFood', function () {
+    var ids = foods.map(function (f) { return f.id; });
+    ids.forEach(function (id) { T.ok(id in NM.Icons.BY_FOOD, id + ' has no icon'); });
+    Object.keys(NM.Icons.BY_FOOD).forEach(function (id) { T.ok(ids.indexOf(id) >= 0, 'icon for unknown food ' + id); });
+  });
+
+  // Synchronous, so the harness needs no async tests; Scripts/Test.ps1 allows file:// reads.
+  T.test('Data.EveryIconFileExists', function () {
+    var seen = {};
+    foods.forEach(function (f) {
+      var src = NM.Icons.src(f.id);
+      if (seen[src]) return;
+      seen[src] = true;
+      var x = new XMLHttpRequest();
+      x.overrideMimeType('text/plain; charset=x-user-defined');
+      try {
+        x.open('GET', '../site/' + src, false);
+        x.send();
+      } catch (e) { T.ok(false, f.id + ': cannot read site/' + src); }
+      T.ok(x.responseText.length > 0, f.id + ': site/' + src + ' is missing or empty');
+    });
+  });
 })();

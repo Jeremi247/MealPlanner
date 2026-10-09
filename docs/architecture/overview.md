@@ -9,6 +9,7 @@ A static site in `site/`, served by Python's `http.server` from `Serve.bat`, wit
 | File | Is | Owned by |
 |---|---|---|
 | `site/js/data/foods.js` | The food table, as Jeremi's reference table lists it | [food data](../subsystems/food-data.md) |
+| `site/js/data/icons.js`, `site/img/foods/` | The emoji picture for each food | [0013](../decisions/0013-foods-are-shown-as-fluent-3d-emoji.md) |
 | `site/js/core/nutrition.js` | Normalises the table to per-ml records; sums a plate | [food data](../subsystems/food-data.md) |
 | `site/js/core/fit.js` | Scores one more portion of each food against the day | [fit scoring](../subsystems/fit-scoring.md) |
 | `site/js/store.js` | Per-browser persistence of target, meals, selection and view | [0005](../decisions/0005-state-lives-in-the-browser.md) |

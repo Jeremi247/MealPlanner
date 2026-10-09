@@ -39,5 +39,13 @@
     return e;
   }
 
-  NM.Format = { LABEL: LABEL, TIER_LABEL: TIER_LABEL, UNIT: UNIT, num: num, listed: listed, percent: percent, grams: grams, GRAMS_TITLE: GRAMS_TITLE, el: el };
+  // A food's picture. Decorative: the food's name always sits beside it.
+  function icon(src, cls) {
+    var img = el('img', cls);
+    img.src = src;
+    img.alt = '';
+    return img;
+  }
+
+  NM.Format = { LABEL: LABEL, TIER_LABEL: TIER_LABEL, UNIT: UNIT, num: num, listed: listed, percent: percent, grams: grams, GRAMS_TITLE: GRAMS_TITLE, el: el, icon: icon };
 })(window.NM = window.NM || {});

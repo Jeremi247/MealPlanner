@@ -94,6 +94,7 @@
     t.dataset.focus = 'tile:' + food.id;
 
     var head = el('div', 'tile-head');
+    head.appendChild(F.icon(NM.Icons.src(food.id), 'tile-icon'));
     var name = el('span', 'tile-name', food.name + (food.reference ? ' †' : ''));
     if (change) {
       var arrow = el('span', 'tile-change tile-change-' + change.dir, change.dir === 'up' ? '↑' : '↓');

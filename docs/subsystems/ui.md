@@ -10,7 +10,7 @@ One object, owned by `app.js`: the daily `target`, `meals` (one `[{ id, ml }]` p
 
 One section per category, in the table's order. A tile shows, from top to bottom:
 
-- name, and **ml per 100 kcal** — the volume 100 kcal of the food buys
+- the food's picture ([0013](../decisions/0013-foods-are-shown-as-fluent-3d-emoji.md)), its name, and **ml per 100 kcal** — the volume 100 kcal of the food buys
 - preparation, or for a fat portion the portion and its volume
 - kcal as listed, and the table's comparison to the category average
 - protein, fat and carbs as listed; `~` marks a non-zero estimate
@@ -39,7 +39,7 @@ The sidebar is a stack of cards: the day, then one card per meal, then **+ Add m
 - Its name and how many foods it holds, then bars for volume, protein and carbs against the meal's share of the day, on every meal whether selected or not.
 - Selected, its rows and **Clear** as well. Selection changes nothing else on the card.
 - **×** removes the meal, asking first if it holds food. The last meal has no ×. Meals are named by position, so removing one renumbers the rest.
-- **Rows**: −/+ by the food's step, or type an ml value. Zero removes the row. Under the ml is the estimated weight, which is also an input. A weight typed there is converted to ml ([0008](../decisions/0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md)).
+- **Rows**: the food's picture and name, −/+ by the food's step, or type an ml value. Zero removes the row. Under the ml is the estimated weight, which is also an input. A weight typed there is converted to ml ([0008](../decisions/0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md)).
 
 A weight is always marked `~` and carries a tooltip ([0007](../decisions/0007-weight-is-shown-as-an-estimate.md)). There is no weight total.
 

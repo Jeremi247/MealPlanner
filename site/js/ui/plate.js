@@ -92,7 +92,10 @@
     var row = el('li', 'item');
     var a = NM.Nutrition.amount(food, ml);
     var name = el('div', 'item-name');
-    name.appendChild(el('span', null, food.name));
+    var title = el('span', 'item-title');
+    title.appendChild(F.icon(NM.Icons.src(food.id), 'item-icon'));
+    title.appendChild(document.createTextNode(food.name));
+    name.appendChild(title);
     var sub = food.portion
       ? F.num(ml / food.portionMl, 2) + ' × ' + food.portion
       : food.prep;

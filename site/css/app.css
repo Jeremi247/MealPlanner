@@ -151,8 +151,9 @@ button, input, select { font: inherit; color: inherit; }
 .tile.is-reference { opacity: .72; }
 .tile.is-idle { cursor: default; }
 
-.tile-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-.tile-name { font-weight: 600; }
+.tile-head { display: flex; gap: 8px; align-items: center; }
+.tile-icon { width: 40px; height: 40px; flex: none; }
+.tile-name { font-weight: 600; flex: 1; min-width: 0; }
 .tile-density { color: var(--muted); font-size: 11px; white-space: nowrap; }
 .tile-density b { color: var(--volume); font-size: 13px; }
 .tile-prep { color: var(--muted); font-size: 12px; }
@@ -258,7 +259,8 @@ button, input, select { font: inherit; color: inherit; }
 }
 .item:first-child { border-top: 0; }
 .item-name { grid-area: name; display: flex; flex-direction: column; min-width: 0; }
-.item-name span { font-weight: 600; }
+.item-title { font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.item-icon { width: 20px; height: 20px; flex: none; }
 .item-name small { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item-ctl { grid-area: ctl; display: flex; align-items: center; gap: 2px; }
 .item-ml { width: 58px; text-align: right; padding: 3px 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
