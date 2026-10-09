@@ -1,18 +1,20 @@
 # Fit scoring
 
-Scope: `site/js/core/fit.js` — how each tile's colour is computed from the plate and the meal target. It does not cover how the colour is drawn ([UI](ui.md)). The argument for this shape is [0003](../decisions/0003-fit-is-scored-against-what-the-plate-lacks.md).
+Scope: `site/js/core/fit.js` — how each tile's colour is computed from the day's meals and the daily target, or from one meal and its share ([0012](../decisions/0012-colours-can-follow-the-selected-meal.md)). It does not cover how the colour is drawn ([UI](ui.md)). The argument for this shape is [0003](../decisions/0003-fit-is-scored-against-what-the-plate-lacks.md).
 
 ## Inputs
 
-- The **target**: kcal, protein, fat, carbs and volume for one meal.
-- The **plate**: `[{ food, ml }]`, summed by `Nutrition.totals`.
+- The **target**: kcal, protein, fat, carbs and volume for one day.
+- The **day**: every meal's rows together, `[{ food, ml }]`, summed by `Nutrition.totals`. In this doc "the plate" is that sum.
+- The **number of meals**. `Fit.mealShare(target, meals)` is one meal's share, the target divided evenly.
+- With **selection colours**, the selected meal's rows stand in for the day and its share for the target, with one meal. Everything below applies unchanged.
 - Each candidate food at its **default portion** — what one click would add.
 
 ## Dimensions
 
 **Balanced:** protein, fat, carbs, volume. **Budgeted:** the same four plus kcal. kcal is a budget only, since it is the macros counted again.
 
-For each balanced dimension, `need` is how much of the target is still missing, clamped to 0…1. `share` is the fraction of the target one portion adds.
+For each balanced dimension, `need` is how much of the daily target is still missing, clamped to 0…1. `share` is the fraction of **one meal's share** one portion adds ([0011](../decisions/0011-a-day-of-meals-against-a-daily-target.md)). With one meal the two targets are the same.
 
 ## The score
 
@@ -24,7 +26,7 @@ balance = Σ share[d] × (need[d] − mean(need))
 
 **Plate is empty — the empty regime.** Every need is 1, so the balance term is zero for every food. Instead a food is scored by how evenly it covers the dimensions on its own: the cosine between its `share` vector and the all-ones vector. That cosine runs from ½ for a food covering one dimension to 1 for an even one, and is mapped to 0…`FULL_GOOD`.
 
-**Both regimes** subtract the overshoot the portion is responsible for, past 100 % of target, weighted per dimension: 1 for each macro, 0.25 for volume, 1.5 for kcal.
+**Both regimes** subtract the overshoot the portion is responsible for past 100 % of the daily target, as a fraction of one meal's share, weighted per dimension: 1 for each macro, 0.25 for volume, 1.5 for kcal.
 
 ## Normalisation
 
@@ -60,11 +62,14 @@ A pick can move other tiles **up** a band as well as down. "Ahead" is measured a
 - With every target nearly met, no tile is green. With an empty plate, only an overshoot is red.
 - After a tablespoon of peanut butter, oil is `against` and lentils `recommended`.
 - After chicken, adding lentils moves almonds up for fat, and adding potatoes moves potatoes down for carbs.
+- A day of three identical meals balances each food exactly as one of those meals does against a third of the target.
 
 ## Open questions
 
 - Whether the default portion should be the scoring basis, or a user-chosen one.
 - Whether a ratio target (percent of kcal from each macro) should be offered beside the absolute one.
+- Early in the day the colours are pale, because every need is still near 1. Should `need` be measured against the meals started so far instead of the whole day?
+- Should a meal far past its share colour anything, or stay a number on its card?
 
 ## See also
 - [0003](../decisions/0003-fit-is-scored-against-what-the-plate-lacks.md) — the argument and the rejected alternatives

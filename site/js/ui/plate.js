@@ -1,10 +1,12 @@
-// The sidebar: the meal target, the plate's totals against it, and the plate itself.
+// The sidebar: the day card (daily target and totals) and one card per meal, each with
+// its meal-level nutrients against its share of the day and, when selected, its rows.
 (function (NM) {
   'use strict';
 
   var F = NM.Format;
   var el = F.el;
   var TARGET_FIELDS = ['kcal', 'volume', 'protein', 'fat', 'carbs'];
+  var MEAL_FIELDS = ['volume', 'protein', 'carbs'];
 
   function targetForm(target, onTarget) {
     var form = el('div', 'target');
@@ -144,37 +146,92 @@
     return row;
   }
 
-  // `ctx`: { target, items [{food, ml}], totals, onTarget(k, v), onSet(food, ml), onClear }.
-  function render(root, ctx) {
-    root.textContent = '';
+  // A click on a card selects it, unless it lands on one of the card's own controls.
+  function selectOnClick(card, onSelect) {
+    card.addEventListener('click', function (e) {
+      if (!e.target.closest('input, button, label')) onSelect();
+    });
+  }
 
-    var t = el('section', 'panel');
-    t.appendChild(el('h2', null, 'Meal target'));
-    t.appendChild(targetForm(ctx.target, ctx.onTarget));
-    root.appendChild(t);
+  function cardHead(title, sub, focusKey, selected, onSelect) {
+    var head = el('div', 'card-head');
+    var b = el('button', 'card-title'); b.type = 'button';
+    b.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    b.dataset.focus = focusKey;
+    b.appendChild(el('span', 'card-name', title));
+    if (sub) b.appendChild(sub);
+    b.addEventListener('click', onSelect);
+    head.appendChild(b);
+    return head;
+  }
 
-    var s = el('section', 'panel');
-    s.appendChild(el('h2', null, 'Plate'));
-    s.appendChild(summary(ctx.totals, ctx.target));
-    root.appendChild(s);
+  function dayCard(ctx) {
+    var selected = ctx.selected === 'day';
+    var card = el('section', 'panel card card-day' + (selected ? ' is-selected' : ''));
+    var onSelect = function () { ctx.onSelect('day'); };
+    card.appendChild(cardHead('Day', el('small', 'card-sub', ctx.meals.length + ' meals'), 'select:day', selected, onSelect));
+    card.appendChild(el('h3', null, 'Daily target'));
+    card.appendChild(targetForm(ctx.target, ctx.onTarget));
+    card.appendChild(summary(ctx.dayTotals, ctx.target));
+    if (selected) {
+      card.appendChild(el('p', 'day-hint' + (ctx.unplaced ? ' is-alert' : ''), ctx.unplaced
+        ? 'Select a meal below to add ' + ctx.unplaced.name + ' to it.'
+        : 'Select a meal below to add foods to it.'));
+    }
+    selectOnClick(card, onSelect);
+    return card;
+  }
 
-    var l = el('section', 'panel');
-    var head = el('div', 'panel-head');
-    head.appendChild(el('h2', null, 'On the plate'));
-    if (ctx.items.length) {
+  function mealCard(meal, i, ctx) {
+    var selected = ctx.selected === i;
+    var share = NM.Fit.mealShare(ctx.target, ctx.meals.length);
+    var card = el('section', 'panel card card-meal' + (selected ? ' is-selected' : ''));
+    var onSelect = function () { ctx.onSelect(i); };
+    var count = meal.items.length;
+    var sub = el('small', 'card-sub', count ? count + (count === 1 ? ' food' : ' foods') : 'empty');
+    var head = cardHead(meal.name, sub, 'select:meal:' + i, selected, onSelect);
+    if (selected && meal.items.length) {
       var clear = el('button', 'link', 'Clear'); clear.type = 'button';
+      clear.dataset.focus = 'clear:' + i;
       clear.addEventListener('click', ctx.onClear);
       head.appendChild(clear);
     }
-    l.appendChild(head);
-    if (!ctx.items.length) {
-      l.appendChild(el('p', 'empty-note', 'Nothing yet. Pick a food from the grid — tiles are tinted by how well each would balance the plate.'));
-    } else {
-      var ul = el('ul', 'items');
-      ctx.items.forEach(function (it) { ul.appendChild(itemRow(it.food, it.ml, ctx.onSet)); });
-      l.appendChild(ul);
+    if (ctx.meals.length > 1) {
+      var rm = el('button', 'item-rm', '×'); rm.type = 'button';
+      rm.setAttribute('aria-label', 'Remove ' + meal.name);
+      rm.dataset.focus = 'remove-meal:' + i;
+      rm.addEventListener('click', function () { ctx.onRemoveMeal(i); });
+      head.appendChild(rm);
     }
-    root.appendChild(l);
+    card.appendChild(head);
+
+    var bars = el('div', 'meal-bars');
+    MEAL_FIELDS.forEach(function (k) { bars.appendChild(bar(k, meal.totals[k], share[k])); });
+    card.appendChild(bars);
+    if (selected) {
+      if (!meal.items.length) {
+        card.appendChild(el('p', 'empty-note', 'Nothing yet. Pick a food from the grid to add it here.'));
+      } else {
+        var ul = el('ul', 'items');
+        meal.items.forEach(function (it) { ul.appendChild(itemRow(it.food, it.ml, ctx.onSet)); });
+        card.appendChild(ul);
+      }
+    }
+    selectOnClick(card, onSelect);
+    return card;
+  }
+
+  // `ctx`: { target (daily), meals [{ name, items [{food, ml}], totals }], dayTotals, selected (index
+  // or 'day'), unplaced (a food clicked while the day was selected, or null), onTarget(k, v),
+  // onSelect(index | 'day'), onSet(food, ml) on the selected meal, onClear, onAddMeal, onRemoveMeal(index) }.
+  function render(root, ctx) {
+    root.textContent = '';
+    root.appendChild(dayCard(ctx));
+    ctx.meals.forEach(function (m, i) { root.appendChild(mealCard(m, i, ctx)); });
+    var add = el('button', 'add-meal', '+ Add meal'); add.type = 'button';
+    add.dataset.focus = 'add-meal';
+    add.addEventListener('click', ctx.onAddMeal);
+    root.appendChild(add);
   }
 
   NM.Plate = { render: render };

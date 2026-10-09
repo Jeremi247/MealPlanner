@@ -29,7 +29,7 @@ Scope: the rules this backlog is kept by, the current milestone, and the four pr
 
 **Built; awaiting review.** Done means the reference table is in the app with every value it gives, the grid colours by fit as [0003](decisions/0003-fit-is-scored-against-what-the-plate-lacks.md) specifies, the plate shows its volume and macros against a target, and the gate is green. What stands between that and *met* is Jeremi's review ([P0](todo/P0.md)).
 
-**Excluded until the review asks**: custom foods, a meal log, export, micronutrients. Each is on a list below.
+**Excluded until the review asks**: custom foods, a history across days, export, micronutrients. Each is on a list below.
 
 ## See also
 - [P0](todo/P0.md), [P1](todo/P1.md), [P2](todo/P2.md), [P3](todo/P3.md) — the items themselves

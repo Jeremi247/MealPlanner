@@ -4,7 +4,7 @@
 
 **Open**
 
-- The default meal target: 600 kcal, 45 g protein, 20 g fat, 55 g carbs, 750 ml. Per meal, or should the target be per day with meals beneath it?
+- The default daily target: 1800 kcal, 135 g protein, 60 g fat, 165 g carbs, 2250 ml, three times the old meal target ([0011](../../decisions/0011-a-day-of-meals-against-a-daily-target.md)). Right numbers?
 - One click adds 150 ml of a protein or starch, 250 ml of a volume food, one fat portion. Right sizes?
 - Fat portions step by half a portion. Should they be entered in ml like the rest, or in portions?
 - The counted-item portion volumes are estimates: 20 almonds ≈ 40 ml, 20 olives ≈ 100 ml, ½ avocado ≈ 100 ml, 2 eggs ≈ 100 ml, 7 walnut halves ≈ 30 ml, 25 pistachios ≈ 20 ml, 9 cashews ≈ 25 ml.

@@ -14,3 +14,5 @@ Append-only in substance: a reversal is a new record superseding the old one, ne
 - [0008 — A weight can be typed in, and is stored as ml](0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md) — supersedes 0007's "never typed in"
 - [0009 — Colour is measured against the target](0009-colour-is-measured-against-the-target.md) — supersedes 0003's per-side normalisation
 - [0010 — Track what a supplement cannot carry](0010-track-what-a-supplement-cannot-carry.md) — fibre is scored; four minerals are shown; the rest is left to the supplement
+- [0011 — A day of meals against a daily target](0011-a-day-of-meals-against-a-daily-target.md) — supersedes 0003 and 0009's single plate and meal target; superseded in part by 0012
+- [0012 — Colours can follow the selected meal](0012-colours-can-follow-the-selected-meal.md) — supersedes 0011's day-only colours; day colours stay the default

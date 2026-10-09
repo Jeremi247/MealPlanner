@@ -10,20 +10,20 @@ A static site in `site/`, served by Python's `http.server` from `Serve.bat`, wit
 |---|---|---|
 | `site/js/data/foods.js` | The food table, as Jeremi's reference table lists it | [food data](../subsystems/food-data.md) |
 | `site/js/core/nutrition.js` | Normalises the table to per-ml records; sums a plate | [food data](../subsystems/food-data.md) |
-| `site/js/core/fit.js` | Scores one more portion of each food against the plate | [fit scoring](../subsystems/fit-scoring.md) |
-| `site/js/store.js` | Per-browser persistence of target, plate and view | [0005](../decisions/0005-state-lives-in-the-browser.md) |
+| `site/js/core/fit.js` | Scores one more portion of each food against the day | [fit scoring](../subsystems/fit-scoring.md) |
+| `site/js/store.js` | Per-browser persistence of target, meals, selection and view | [0005](../decisions/0005-state-lives-in-the-browser.md) |
 | `site/js/ui/format.js` | Number formatting and the `el()` DOM helper | [JS style](../conventions/js-style.md) |
 | `site/js/ui/grid.js` | The tinted food grid | [UI](../subsystems/ui.md) |
-| `site/js/ui/plate.js` | Target form, totals against target, plate rows | [UI](../subsystems/ui.md) |
+| `site/js/ui/plate.js` | The day card and the meal cards | [UI](../subsystems/ui.md) |
 | `site/js/app.js` | State, and the re-render on every change | [UI](../subsystems/ui.md) |
 
 `core/` reads no DOM and is what `Tests/` exercises. `ui/` reads `core/` and never the reverse.
 
 ## A click, end to end
 
-1. A tile click adds the food's default portion in ml to `state.plate`.
-2. `app.js` saves the state, then calls `NM.Fit.rank(foods, plate, target)`.
-3. `rank` sums the plate, scores every food's default portion against it, and maps each score to −1…1 on a fixed scale.
+1. A tile click adds the food's default portion in ml to the selected meal in `state.meals`.
+2. `app.js` saves the state, then calls `NM.Fit.rank(foods, day, target, meals)` with every meal's rows together.
+3. `rank` sums the day, scores every food's default portion against it, and maps each score to −1…1 on a fixed scale.
 4. `Grid.render` and `Plate.render` rebuild their roots from the result.
 
 There is no incremental update. The grid is ~66 tiles and a full rebuild is below a frame.

@@ -84,6 +84,20 @@
     T.eq(Object.keys(NM.Fit.compare(chicken, chicken)).length, 0, 'no change reports nothing');
   });
 
+  // The day's need is measured against the daily target, but a portion against one meal's
+  // share of it, so a day of identical meals balances as one meal does against its share.
+  // Overshoot differs only where a portion crosses a target the day still has room under.
+  T.test('Fit.APortionIsWeighedAgainstOneMealsShareOfTheDay', function () {
+    var day = { kcal: 1800, protein: 135, fat: 60, carbs: 165, volume: 2250 };
+    T.eq(NM.Fit.mealShare(day, 3).protein, 45, 'a third of the protein');
+    var meal = [['peanut-butter', 15], ['chicken-breast', 150]];
+    var one = NM.Fit.rank(foods, plate(meal), target).results;
+    var three = NM.Fit.rank(foods, plate(meal.concat(meal, meal)), day, 3).results;
+    foods.forEach(function (f) { T.near(three[f.id].balance, one[f.id].balance, 1e-12, f.id); });
+    var unscaled = NM.Fit.rank(foods, plate(meal.concat(meal, meal)), day, 1).results;
+    T.ok(Math.abs(unscaled['lentils'].balance) < Math.abs(one['lentils'].balance), 'without the share, colours would fade');
+  });
+
   T.test('Fit.MostMissingIsOrderedByNeed', function () {
     var p = plate([['chicken-breast', 150]]);
     var m = NM.Fit.mostMissing(NM.Nutrition.totals(p), target);

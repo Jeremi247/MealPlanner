@@ -13,8 +13,9 @@
     name: function (a, b) { return a.name.localeCompare(b.name); }
   };
 
-  // Plain-language reasons behind one food's score, strongest first.
-  function reasons(food, r) {
+  // Plain-language reasons behind one food's score, strongest first. `subject` names what
+  // the tiles are scored against: 'the day' or a meal's name.
+  function reasons(food, r, subject) {
     var out = [];
     if (r.regime === 'empty') {
       NM.Fit.BALANCE.forEach(function (d) {
@@ -27,8 +28,8 @@
         if (Math.abs(c) < 0.004) return;
         var label = F.LABEL[d].toLowerCase();
         out.push(c > 0
-          ? { good: true, w: c, text: 'adds ' + label + ' the plate is short on' }
-          : { good: false, w: -c, text: 'adds ' + label + ' the plate already leads on' });
+          ? { good: true, w: c, text: 'adds ' + label + ' ' + subject + ' is short on' }
+          : { good: false, w: -c, text: 'adds ' + label + ' ' + subject + ' already leads on' });
       });
     }
     Object.keys(r.over).forEach(function (d) {
@@ -37,13 +38,13 @@
     return out.sort(function (a, b) { return b.w - a.w; }).slice(0, 3);
   }
 
-  // Why a tile moved band with the last change to the plate or target. `c` is from Fit.compare.
-  function changeText(c) {
+  // Why a tile moved band with the last change to the meals or target. `c` is from Fit.compare.
+  function changeText(c, subject) {
     var label = F.LABEL[c.dim].toLowerCase();
     if (c.kind === 'over') return c.dir === 'up' ? 'Moved up: pushes ' + label + ' less far over target now' : 'Moved down: would now push ' + label + ' over target';
     return c.dir === 'up'
-      ? 'Moved up: the plate is now further behind on ' + label
-      : 'Moved down: the plate is now further ahead on ' + label;
+      ? 'Moved up: ' + subject + ' is now further behind on ' + label
+      : 'Moved down: ' + subject + ' is now further ahead on ' + label;
   }
 
   function macroLine(food) {
@@ -81,11 +82,12 @@
     return w;
   }
 
-  function tile(food, r, change, inPlateMl, onAdd) {
+  function tile(food, r, change, inScopeMl, ctx) {
     var t = el('button', 'tile');
     t.type = 'button';
     if (food.reference) t.classList.add('is-reference');
-    if (inPlateMl) t.classList.add('is-on-plate');
+    if (inScopeMl) t.classList.add('is-on-plate');
+    if (!ctx.addTo) t.classList.add('is-idle');
     t.classList.add('fit-' + r.tier);
     t.dataset.fit = r.norm.toFixed(2);
     t.dataset.id = food.id;
@@ -95,7 +97,7 @@
     var name = el('span', 'tile-name', food.name + (food.reference ? ' †' : ''));
     if (change) {
       var arrow = el('span', 'tile-change tile-change-' + change.dir, change.dir === 'up' ? '↑' : '↓');
-      arrow.title = changeText(change);
+      arrow.title = changeText(change, ctx.subject);
       name.appendChild(arrow);
     }
     head.appendChild(name);
@@ -124,26 +126,29 @@
     var add = el('span', 'tile-add', '+ ' + (food.portion ? '1 portion' : F.num(food.defaultMl) + ' ml') + ' ');
     add.appendChild(weight(food, food.defaultMl));
     foot.appendChild(add);
-    if (inPlateMl) {
-      var on = el('span', 'tile-onplate', 'on plate: ' + F.num(inPlateMl) + ' ml ');
-      on.appendChild(weight(food, inPlateMl));
+    if (inScopeMl) {
+      var on = el('span', 'tile-onplate', ctx.scopeLabel + ': ' + F.num(inScopeMl) + ' ml ');
+      on.appendChild(weight(food, inScopeMl));
       foot.appendChild(on);
     }
     t.appendChild(foot);
 
-    var why = reasons(food, r);
+    var why = reasons(food, r, ctx.subject);
     var ul = el('ul', 'tile-why');
     ul.appendChild(el('li', 'why-tier', F.TIER_LABEL[r.tier]));
-    if (change) ul.appendChild(el('li', 'why-change why-' + (change.dir === 'up' ? 'good' : 'bad'), changeText(change)));
+    if (change) ul.appendChild(el('li', 'why-change why-' + (change.dir === 'up' ? 'good' : 'bad'), changeText(change, ctx.subject)));
     why.forEach(function (w) { ul.appendChild(el('li', w.good ? 'why-good' : 'why-bad', w.text)); });
     t.appendChild(ul);
 
-    t.setAttribute('aria-label', 'Add ' + food.name + '. ' + F.TIER_LABEL[r.tier] + '. ' + (change ? changeText(change) + '. ' : '') + why.map(function (w) { return w.text; }).join('; '));
-    t.addEventListener('click', function () { onAdd(food); });
+    var action = ctx.addTo ? 'Add ' + food.name + ' to ' + ctx.addTo : food.name + ', select a meal to add it';
+    t.setAttribute('aria-label', action + '. ' + F.TIER_LABEL[r.tier] + '. ' + (change ? changeText(change, ctx.subject) + '. ' : '') + why.map(function (w) { return w.text; }).join('; '));
+    t.addEventListener('click', function () { ctx.onAdd(food); });
     return t;
   }
 
-  // `ctx`: { categories, foods, ranked, changes (id → Fit.compare entry), plateMl (id → ml), view, onAdd }.
+  // `ctx`: { categories, foods, ranked, changes (id → Fit.compare entry), inScope (id → ml in the
+  // selected meal, or the day), scopeLabel, addTo (the selected meal's name, null for the day),
+  // subject (what the tiles are scored against, 'the day' or a meal's name), view, onAdd }.
   function render(root, ctx) {
     root.textContent = '';
     var q = ctx.view.query.trim().toLowerCase();
@@ -166,7 +171,7 @@
       h.appendChild(el('p', 'cat-note', cat.note));
       sec.appendChild(h);
       var grid = el('div', 'grid');
-      foods.forEach(function (f) { grid.appendChild(tile(f, ctx.ranked.results[f.id], ctx.changes[f.id], ctx.plateMl[f.id] || 0, ctx.onAdd)); });
+      foods.forEach(function (f) { grid.appendChild(tile(f, ctx.ranked.results[f.id], ctx.changes[f.id], ctx.inScope[f.id] || 0, ctx)); });
       sec.appendChild(grid);
       root.appendChild(sec);
     });

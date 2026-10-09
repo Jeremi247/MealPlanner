@@ -1,10 +1,10 @@
 # Fibre as a fit dimension
 
-**Ask** — give every row a `fibre` value per 100 ml (per portion for fat), take it out of carbs, and add it to fit scoring as a balanced dimension with its own meal target ([0010](../../decisions/0010-track-what-a-supplement-cannot-carry.md)). Not in it: other nutrients ([P3](../P3/micronutrients.md)).
+**Ask** — give every row a `fibre` value per 100 ml (per portion for fat), take it out of carbs, and add it to fit scoring as a balanced dimension with its own daily target ([0010](../../decisions/0010-track-what-a-supplement-cannot-carry.md)). Not in it: other nutrients ([P3](../P3/micronutrients.md)).
 
 **Open**
 
-- The default meal target. ~10 g, a third of 30 g a day, follows the evidence in 0010.
+- The default daily target. ~30 g follows the evidence in 0010. Show it on the meal cards too ([0011](../../decisions/0011-a-day-of-meals-against-a-daily-target.md))?
 - Overshoot weight. The evidence gives no harmful upper bound, only gut tolerance. 0, or a small weight like volume's 0.25?
 - Does the carbs dimension become fibre-free carbs, and does the default 55 g carbs target move with it?
 - Does fibre count in the empty regime's evenness cosine, or only in the balance term? A fifth dimension makes every zero-fibre food less even, so every empty-plate colour moves and `FULL_GOOD` may need retuning.

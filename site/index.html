@@ -10,7 +10,7 @@
   <header class="top">
     <div class="brand">
       <h1>Nutrient Manager</h1>
-      <p>Build a plate by volume. Every amount is millilitres of the food as prepared.</p>
+      <p>Plan a day of meals by volume. Every amount is millilitres of the food as prepared.</p>
     </div>
     <div class="tools">
       <input id="search" type="search" placeholder="Search foods" aria-label="Search foods">
@@ -22,6 +22,11 @@
           <option value="name">Name</option>
         </select>
       </label>
+      <div class="toggle" role="group" aria-label="Colour tiles by">
+        <span>Colours</span>
+        <button id="colours-day" class="toggle-btn" type="button" title="Tiles show how a portion would balance the whole day">Day</button>
+        <button id="colours-selection" class="toggle-btn" type="button" title="Tiles show how a portion would balance the selected meal, against its share of the day">Selection</button>
+      </div>
       <label class="check"><input id="show-reference" type="checkbox"> Reference rows †</label>
     </div>
   </header>
@@ -32,13 +37,13 @@
       <span class="legend-scale" role="img" aria-label="Tile colours from worst to best: recommended against, might not be the best idea, you may add it, alright to add, recommended" title="Red: recommended against · orange: might not be the best idea · yellow-green: you may add it · light green: alright to add · green: recommended"></span>
       Recommended
     </span>
-    <span class="legend-text"><b>Red</b> pushes the plate further off balance · <b>green</b> fills what it is missing</span>
+    <span class="legend-text"><b>Red</b> pushes it further off balance · <b>green</b> fills what it is missing</span>
     <span id="regime" class="legend-regime"></span>
   </div>
 
   <div class="layout">
     <main id="grid" aria-label="Foods"></main>
-    <aside id="plate" aria-label="Plate"></aside>
+    <aside id="plate" aria-label="Day and meals"></aside>
   </div>
 
   <script src="js/data/foods.js"></script>

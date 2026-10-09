@@ -1,4 +1,4 @@
-// Scores how well one more portion of a food fits the plate against the meal target.
+// Scores how well one more portion of a food fits the day's meals against the daily target.
 // The rule, its two regimes and its weights are docs/subsystems/fit-scoring.md;
 // this file implements that doc and argues nothing it does not.
 (function (NM) {
@@ -45,22 +45,31 @@
     return keys.reduce(function (s, k) { return s + obj[k]; }, 0) / keys.length;
   }
 
-  // Overshoot this addition is responsible for, per dimension, as a fraction of target.
-  function addedOvershoot(totals, added, target) {
+  // One meal's share of the daily target: the target split evenly across `meals`.
+  function mealShare(target, meals) {
+    var s = {};
+    Object.keys(target).forEach(function (k) { s[k] = target[k] / meals; });
+    return s;
+  }
+
+  // Overshoot this addition is responsible for, per dimension, as a fraction of one meal's share.
+  function addedOvershoot(totals, added, target, meals) {
     var o = {};
     OVERSHOOT.forEach(function (d) {
       var before = Math.max(0, ratio(totals[d], target[d]) - 1);
       var after = Math.max(0, ratio(totals[d] + added[d], target[d]) - 1);
-      o[d] = after - before;
+      o[d] = (after - before) * meals;
     });
     return o;
   }
 
-  // Raw score of adding `added` (an amount) to `totals`. Larger is a better fit.
-  function scoreOne(totals, added, target, regime) {
+  // Raw score of adding `added` (an amount) to `totals`, the day so far. `need` is measured
+  // against the daily target, `share` and overshoot against one meal's share of it.
+  function scoreOne(totals, added, target, regime, meals) {
+    meals = meals || 1;
     var need = needs(totals, target);
     var share = {};
-    BALANCE.forEach(function (d) { share[d] = ratio(added[d], target[d]); });
+    BALANCE.forEach(function (d) { share[d] = ratio(added[d], target[d]) * meals; });
 
     var balance;
     if (regime === 'empty') {
@@ -76,20 +85,21 @@
       balance = BALANCE.reduce(function (s, d) { return s + share[d] * (need[d] - m); }, 0);
     }
 
-    var over = addedOvershoot(totals, added, target);
+    var over = addedOvershoot(totals, added, target, meals);
     var penalty = OVERSHOOT.reduce(function (s, d) { return s + OVERSHOOT_WEIGHT[d] * over[d]; }, 0);
 
     return { raw: balance - penalty, balance: balance, penalty: penalty, share: share, need: need, over: over };
   }
 
   // Scores every food at its default portion and maps each raw score to [-1, 1] on the
-  // fixed scale. `items` is the plate, [{ food, ml }]. Returns a map from food id to its result.
-  function rank(foods, items, target) {
+  // fixed scale. `items` is every meal of the day, [{ food, ml }]; `target` is daily, split
+  // across `meals` (1 if omitted). Returns a map from food id to its result.
+  function rank(foods, items, target, meals) {
     var totals = NM.Nutrition.totals(items);
     var regime = totals.volume > 0 ? 'balance' : 'empty';
     var results = {};
     foods.forEach(function (f) {
-      var r = scoreOne(totals, NM.Nutrition.amount(f, f.defaultMl), target, regime);
+      var r = scoreOne(totals, NM.Nutrition.amount(f, f.defaultMl), target, regime, meals);
       r.norm = r.raw >= 0 ? Math.min(1, r.raw / FULL_GOOD) : Math.max(-1, r.raw / FULL_BAD);
       r.tier = tier(r.norm);
       r.regime = regime;
@@ -141,7 +151,7 @@
   }
 
   NM.Fit = {
-    BALANCE: BALANCE, OVERSHOOT_WEIGHT: OVERSHOOT_WEIGHT, TIERS: TIERS, tier: tier, needs: needs,
+    BALANCE: BALANCE, OVERSHOOT_WEIGHT: OVERSHOOT_WEIGHT, TIERS: TIERS, tier: tier, needs: needs, mealShare: mealShare,
     scoreOne: scoreOne, rank: rank, mostMissing: mostMissing, compare: compare
   };
 })(window.NM = window.NM || {});
