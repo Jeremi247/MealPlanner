@@ -13,3 +13,4 @@ Append-only in substance: a reversal is a new record superseding the old one, ne
 - [0007 — Weight is shown as an estimate](0007-weight-is-shown-as-an-estimate.md) — supersedes 0001's "no weight is shown"; superseded in part by 0008
 - [0008 — A weight can be typed in, and is stored as ml](0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md) — supersedes 0007's "never typed in"
 - [0009 — Colour is measured against the target](0009-colour-is-measured-against-the-target.md) — supersedes 0003's per-side normalisation
+- [0010 — Track what a supplement cannot carry](0010-track-what-a-supplement-cannot-carry.md) — fibre is scored; four minerals are shown; the rest is left to the supplement

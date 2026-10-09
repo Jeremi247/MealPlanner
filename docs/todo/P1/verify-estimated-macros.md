@@ -5,7 +5,7 @@
 **Open**
 
 - Which source is canonical when two disagree — myfooddata, fatsecret or USDA FoodData Central?
-- Should fibre be split out of carbs while the values are being checked? That would make it available as a fit dimension.
+- Does each source's carbs include fibre (US) or exclude it (EU)? [Fibre](../P2/fibre.md) is split out of carbs, so one definition has to hold across sources.
 
 **Unblocked.**
 

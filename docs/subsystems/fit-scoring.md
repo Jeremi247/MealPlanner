@@ -64,7 +64,6 @@ A pick can move other tiles **up** a band as well as down. "Ahead" is measured a
 ## Open questions
 
 - Whether the default portion should be the scoring basis, or a user-chosen one.
-- Whether fibre should be a dimension once the data carries it.
 - Whether a ratio target (percent of kcal from each macro) should be offered beside the absolute one.
 
 ## See also
