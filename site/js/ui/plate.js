@@ -4,7 +4,7 @@
 
   var F = NM.Format;
   var el = F.el;
-  var TARGET_FIELDS = ['volume', 'kcal', 'protein', 'fat', 'carbs'];
+  var TARGET_FIELDS = ['kcal', 'volume', 'protein', 'fat', 'carbs'];
 
   function targetForm(target, onTarget) {
     var form = el('div', 'target');
@@ -72,7 +72,7 @@
     hero.appendChild(dens);
     box.appendChild(hero);
 
-    ['volume', 'protein', 'fat', 'carbs', 'kcal'].forEach(function (k) { box.appendChild(bar(k, totals[k], target[k])); });
+    TARGET_FIELDS.forEach(function (k) { box.appendChild(bar(k, totals[k], target[k])); });
 
     if (totals.volume > 0) {
       var missing = NM.Fit.mostMissing(totals, target).filter(function (m) { return m.need > 0.05; });

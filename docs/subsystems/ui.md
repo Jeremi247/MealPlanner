@@ -25,8 +25,8 @@ Reference rows (†) are dimmed and can be hidden. Sort orders apply within each
 
 ## The plate
 
-- **Meal target**: five number inputs. A warning appears when protein, fat and carbs add up to more than 10 % away from the kcal target.
-- **Totals**: total volume as the headline, the plate's ml per 100 kcal, then a bar per dimension. Past its target a bar rescales and the overshoot is hatched red.
+- **Meal target**: five number inputs, in the order kcal, volume, protein, fat, carbs. A warning appears when protein, fat and carbs add up to more than 10 % away from the kcal target.
+- **Totals**: total volume as the headline, the plate's ml per 100 kcal, then a bar per dimension in the target's order. Past its target a bar rescales and the overshoot is hatched red.
 - **Short on**: the most-missing balance dimensions.
 - **Rows**: −/+ by the food's step, or type an ml value. Zero removes the row. Under the ml is the estimated weight, which is also an input. A weight typed there is converted to ml ([0008](../decisions/0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md)).
 
