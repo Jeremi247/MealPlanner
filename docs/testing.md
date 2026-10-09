@@ -1,0 +1,40 @@
+# Testing
+
+Scope: how the app is verified, and what a green run does and does not prove. Why the gate is a headless browser is [0006](decisions/0006-the-test-gate-is-a-headless-browser.md).
+
+## The gate
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Gate.ps1
+```
+
+Runs, in order:
+
+- **`Scripts/Test.ps1`** — `Tests/index.html` in headless Chrome. Exit code is the failure count.
+- **`Scripts/CheckDocs.ps1`** — every relative markdown link and `#anchor` resolves, and every file is inside its word budget ([docs & comments](conventions/docs-and-comments.md)).
+
+Either can be run on its own. Before calling a change done, run the gate and open the site.
+
+## What is tested
+
+| File | Holds |
+|---|---|
+| `Tests/data.test.js` | Every row of Jeremi's table is present once, reproduces the table's own kcal comparison column, keeps the macros the table gives, and respects its category's limits; estimated macros roughly account for the listed kcal |
+| `Tests/nutrition.test.js` | Ranges at midpoint, portions spread over their volume, the table's own starch portion examples, plate sums |
+| `Tests/fit.test.js` | The specifying example, overshoot, per-side normalisation, the empty regime |
+| `Tests/store.test.js` | Unavailable and malformed storage both fall back to defaults |
+
+A new test file is added to `Tests/index.html` below the scripts it uses. A script that throws while loading fails the run by name, since its tests never register.
+
+**A test whose name claims a failure mode has been shown to fail by making that mistake on purpose**, then reverting. A kcal typo in a row, an edited protein value, a text `ml` in saved state, a syntax error in `foods.js` and a sign flip of the overshoot penalty all fail the suite by name.
+
+## What a green run does not prove
+
+- **The views are not under test.** `ui/` and `app.js` are checked by opening the site, picking foods and reading the tiles. The empty plate, one fatty pick, and an overshoot are the three states worth looking at.
+- **A table macro mistyped when first entered passes.** The table has no column to check protein or fat against, so the test holds a second copy, which catches an edit and not the first transcription.
+- **An estimate can be wrong and pass.** The data test catches a typo, not a careful bad estimate ([0004](decisions/0004-estimates-are-marked-not-hidden.md)).
+- **The colours' meaning is a judgement.** The fit tests hold the specified example, not that the formula is the best one ([0003](decisions/0003-fit-is-scored-against-what-the-plate-lacks.md)).
+
+## See also
+- [Fit scoring](subsystems/fit-scoring.md) — the invariants the fit tests hold
+- [Food data](subsystems/food-data.md) — what the data tests check against

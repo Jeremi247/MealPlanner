@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Gate.ps1:*)",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Test.ps1:*)",
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/CheckDocs.ps1:*)",
+      "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Gate.ps1:*)",
+      "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Test.ps1:*)",
+      "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/CheckDocs.ps1:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)"
+    ]
+  }
+}

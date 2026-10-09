@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nutrient Manager</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1>Nutrient Manager</h1>
+      <p>Build a plate by volume. Every amount is millilitres of the food as prepared.</p>
+    </div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search foods" aria-label="Search foods">
+      <label class="select">Sort
+        <select id="sort">
+          <option value="table">Table order</option>
+          <option value="fit">Best fit first</option>
+          <option value="density">Most volume per kcal</option>
+          <option value="name">Name</option>
+        </select>
+      </label>
+      <label class="check"><input id="show-reference" type="checkbox"> Reference rows †</label>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span class="legend-scale" aria-hidden="true"></span>
+    <span class="legend-text"><b>Red</b> pushes the plate further off balance · <b>green</b> fills what it is missing</span>
+    <span id="regime" class="legend-regime"></span>
+  </div>
+
+  <div class="layout">
+    <main id="grid" aria-label="Foods"></main>
+    <aside id="plate" aria-label="Plate"></aside>
+  </div>
+
+  <script src="js/data/foods.js"></script>
+  <script src="js/core/nutrition.js"></script>
+  <script src="js/core/fit.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/ui/format.js"></script>
+  <script src="js/ui/grid.js"></script>
+  <script src="js/ui/plate.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
