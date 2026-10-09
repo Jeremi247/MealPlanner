@@ -18,7 +18,7 @@ Scope: how the site's JavaScript and CSS are written. Prose rules are [docs & co
 ## DOM and CSS
 
 - Build elements with `NM.Format.el(tag, className, text)`. Set text with `textContent`. Never `innerHTML` with data.
-- Colours are tokens on `:root`, redefined under `prefers-color-scheme: dark`. A component never names a raw colour.
+- Colours are tokens on `:root`, one dark set ([0014](../decisions/0014-the-site-is-styled-neon-deco.md)). A component never names a raw colour.
 - Class names are kebab-case and prefixed by their component (`tile-`, `bar-`, `item-`).
 
 ## See also

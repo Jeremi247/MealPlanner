@@ -27,6 +27,11 @@
         <button id="colours-day" class="toggle-btn" type="button" title="Tiles show how a portion would balance the whole day">Day</button>
         <button id="colours-selection" class="toggle-btn" type="button" title="Tiles show how a portion would balance the selected meal, against its share of the day">Selection</button>
       </div>
+      <div class="toggle" role="group" aria-label="Food pictures">
+        <span>Icons</span>
+        <button id="icons-emoji" class="toggle-btn" type="button" title="Full-colour 3D pictures">3D</button>
+        <button id="icons-minimal" class="toggle-btn" type="button" title="One-colour outlines, lit in each tile's band colour">Minimal</button>
+      </div>
       <label class="check"><input id="show-reference" type="checkbox"> Reference rows †</label>
     </div>
   </header>
@@ -34,7 +39,7 @@
   <div class="legend">
     <span class="legend-key">
       Against
-      <span class="legend-scale" role="img" aria-label="Tile colours from worst to best: recommended against, might not be the best idea, you may add it, alright to add, recommended" title="Red: recommended against · orange: might not be the best idea · yellow-green: you may add it · light green: alright to add · green: recommended"></span>
+      <span class="legend-scale" role="img" aria-label="Tile colours from worst to best: recommended against, might not be the best idea, you may add it, alright to add, recommended" title="Red: recommended against · orange: might not be the best idea · yellow: you may add it · lime: alright to add · green: recommended"></span>
       Recommended
     </span>
     <span class="legend-text"><b>Red</b> pushes it further off balance · <b>green</b> fills what it is missing</span>
@@ -47,6 +52,7 @@
   </div>
 
   <script src="js/data/foods.js"></script>
+  <script src="js/data/icons-minimal.js"></script>
   <script src="js/data/icons.js"></script>
   <script src="js/core/nutrition.js"></script>
   <script src="js/core/fit.js"></script>

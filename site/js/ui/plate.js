@@ -88,12 +88,12 @@
     return box;
   }
 
-  function itemRow(food, ml, onSet) {
+  function itemRow(food, ml, onSet, icons) {
     var row = el('li', 'item');
     var a = NM.Nutrition.amount(food, ml);
     var name = el('div', 'item-name');
     var title = el('span', 'item-title');
-    title.appendChild(F.icon(NM.Icons.src(food.id), 'item-icon'));
+    title.appendChild(F.icon(NM.Icons.picture(food.id, icons), 'item-icon'));
     title.appendChild(document.createTextNode(food.name));
     name.appendChild(title);
     var sub = food.portion
@@ -216,7 +216,7 @@
         card.appendChild(el('p', 'empty-note', 'Nothing yet. Pick a food from the grid to add it here.'));
       } else {
         var ul = el('ul', 'items');
-        meal.items.forEach(function (it) { ul.appendChild(itemRow(it.food, it.ml, ctx.onSet)); });
+        meal.items.forEach(function (it) { ul.appendChild(itemRow(it.food, it.ml, ctx.onSet, ctx.icons)); });
         card.appendChild(ul);
       }
     }
@@ -225,7 +225,7 @@
   }
 
   // `ctx`: { target (daily), meals [{ name, items [{food, ml}], totals }], dayTotals, selected (index
-  // or 'day'), unplaced (a food clicked while the day was selected, or null), onTarget(k, v),
+  // or 'day'), unplaced (a food clicked while the day was selected, or null), icons (an Icons style), onTarget(k, v),
   // onSelect(index | 'day'), onSet(food, ml) on the selected meal, onClear, onAddMeal, onRemoveMeal(index) }.
   function render(root, ctx) {
     root.textContent = '';

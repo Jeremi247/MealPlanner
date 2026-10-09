@@ -19,14 +19,14 @@ Either can be run on its own. Before calling a change done, run the gate and ope
 
 | File | Holds |
 |---|---|
-| `Tests/data.test.js` | Every row of Jeremi's table is present once, reproduces the table's own kcal comparison column, keeps the macros the table gives, and respects its category's limits; estimated macros roughly account for the listed kcal; every row has a marked, plausible weight; every food has a picture, and its file exists |
+| `Tests/data.test.js` | Every row of Jeremi's table is present once, reproduces the table's own kcal comparison column, keeps the macros the table gives, and respects its category's limits; estimated macros roughly account for the listed kcal; every row has a marked, plausible weight; every food has a picture, its file exists, and it has a minimal version |
 | `Tests/nutrition.test.js` | Ranges at midpoint, portions spread over their volume, the table's own starch portion examples, plate sums, weight scaling with volume, a typed weight's volume |
 | `Tests/fit.test.js` | The specifying example, overshoot, the fixed colour scale, the five bands, band changes between picks, a nearly-met plate, the empty regime, a portion weighed against one meal's share of the day |
-| `Tests/store.test.js` | Unavailable and malformed storage both fall back to defaults; a selection that names no meal falls back to the first; an unknown colour mode is the day; a v1 plate becomes the first meal without its meal target |
+| `Tests/store.test.js` | Unavailable and malformed storage both fall back to defaults; a selection that names no meal falls back to the first; an unknown colour mode is the day; an unknown icon style is the 3D emoji; a v1 plate becomes the first meal without its meal target |
 
 A new test file is added to `Tests/index.html` below the scripts it uses. A script that throws while loading fails the run by name, since its tests never register.
 
-**A test whose name claims a failure mode has been shown to fail by making that mistake on purpose**, then reverting. A kcal typo in a row, an edited protein value, a text `ml` in saved state, a syntax error in `foods.js`, a food missing from `icons.js`, a missing picture file, a sign flip of the overshoot penalty and a `share` left unscaled by the number of meals all fail the suite by name.
+**A test whose name claims a failure mode has been shown to fail by making that mistake on purpose**, then reverting. A kcal typo in a row, an edited protein value, a text `ml` in saved state, a syntax error in `foods.js`, a food missing from `icons.js`, a missing picture file, a missing minimal icon, a sign flip of the overshoot penalty and a `share` left unscaled by the number of meals all fail the suite by name.
 
 ## What a green run does not prove
 

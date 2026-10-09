@@ -28,8 +28,14 @@
     'pistachios': 'chestnut', 'cashews': 'chestnut'
   };
 
-  // The image path for a food id, relative to site/index.html.
+  // The 3D image's path for a food id, relative to site/index.html.
   function src(id) { return 'img/foods/' + BY_FOOD[id] + '.png'; }
 
-  NM.Icons = { BY_FOOD: BY_FOOD, src: src };
+  // A food's picture in a style, for Format.icon: { src } for 'emoji' (the default), or
+  // { paths } from NM.MinimalIcons for 'minimal'.
+  function picture(id, style) {
+    return style === 'minimal' ? { paths: NM.MinimalIcons[BY_FOOD[id]] } : { src: src(id) };
+  }
+
+  NM.Icons = { BY_FOOD: BY_FOOD, src: src, picture: picture };
 })(window.NM = window.NM || {});

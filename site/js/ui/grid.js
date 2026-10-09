@@ -82,6 +82,19 @@
     return w;
   }
 
+  // The band on the tile's frame: one lit diamond per step up from the worst band, then its word.
+  // Decorative, as the tile's aria label already names the band.
+  function bandLegend(tier) {
+    var lit = NM.Fit.TIERS.length - NM.Fit.TIERS.map(function (t) { return t.id; }).indexOf(tier);
+    var legend = el('span', 'tile-band');
+    legend.setAttribute('aria-hidden', 'true');
+    var meter = el('span', 'tile-meter', new Array(lit + 1).join('◆'));
+    meter.appendChild(el('span', 'tile-meter-off', new Array(NM.Fit.TIERS.length - lit + 1).join('◆')));
+    legend.appendChild(meter);
+    legend.appendChild(el('span', 'tile-band-word', F.TIER_SHORT[tier]));
+    return legend;
+  }
+
   function tile(food, r, change, inScopeMl, ctx) {
     var t = el('button', 'tile');
     t.type = 'button';
@@ -92,9 +105,10 @@
     t.dataset.fit = r.norm.toFixed(2);
     t.dataset.id = food.id;
     t.dataset.focus = 'tile:' + food.id;
+    t.appendChild(bandLegend(r.tier));
 
     var head = el('div', 'tile-head');
-    head.appendChild(F.icon(NM.Icons.src(food.id), 'tile-icon'));
+    head.appendChild(F.icon(NM.Icons.picture(food.id, ctx.view.icons), 'tile-icon'));
     var name = el('span', 'tile-name', food.name + (food.reference ? ' †' : ''));
     if (change) {
       var arrow = el('span', 'tile-change tile-change-' + change.dir, change.dir === 'up' ? '↑' : '↓');

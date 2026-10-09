@@ -105,6 +105,7 @@
     });
     NM.Plate.render(plateRoot, {
       target: state.target, meals: meals, dayTotals: NM.Nutrition.totals(day), selected: state.selected, unplaced: unplaced,
+      icons: state.view.icons,
       onTarget: function (k, v) { state.target[k] = v; update(); },
       onSelect: select,
       onSet: setMl,
@@ -118,6 +119,8 @@
       + (state.selected === 'day' ? ' Select a meal to add foods.' : '');
     coloursDay.setAttribute('aria-pressed', state.view.colours === 'day' ? 'true' : 'false');
     coloursSel.setAttribute('aria-pressed', state.view.colours === 'selection' ? 'true' : 'false');
+    iconsEmoji.setAttribute('aria-pressed', state.view.icons === 'emoji' ? 'true' : 'false');
+    iconsMinimal.setAttribute('aria-pressed', state.view.icons === 'minimal' ? 'true' : 'false');
 
     var back = focusKey && document.querySelector('[data-focus="' + focusKey + '"]');
     if (back) back.focus();
@@ -128,6 +131,8 @@
   var ref = document.getElementById('show-reference');
   var coloursDay = document.getElementById('colours-day');
   var coloursSel = document.getElementById('colours-selection');
+  var iconsEmoji = document.getElementById('icons-emoji');
+  var iconsMinimal = document.getElementById('icons-minimal');
   search.value = state.view.query;
   sort.value = state.view.sort;
   ref.checked = state.view.showReference;
@@ -136,6 +141,8 @@
   ref.addEventListener('change', function () { state.view.showReference = ref.checked; update(); });
   coloursDay.addEventListener('click', function () { state.view.colours = 'day'; update(); });
   coloursSel.addEventListener('click', function () { state.view.colours = 'selection'; update(); });
+  iconsEmoji.addEventListener('click', function () { state.view.icons = 'emoji'; update(); });
+  iconsMinimal.addEventListener('click', function () { state.view.icons = 'minimal'; update(); });
 
   update();
 })(window.NM = window.NM || {});

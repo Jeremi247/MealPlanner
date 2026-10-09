@@ -125,4 +125,14 @@
       T.ok(x.responseText.length > 0, f.id + ': site/' + src + ' is missing or empty');
     });
   });
+  T.test('Data.EveryIconHasAMinimalVersion', function () {
+    foods.forEach(function (f) {
+      var paths = NM.Icons.picture(f.id, 'minimal').paths;
+      T.ok(Array.isArray(paths) && paths.length > 0, f.id + ': no minimal paths for ' + NM.Icons.BY_FOOD[f.id]);
+      (paths || []).forEach(function (p) {
+        var d = typeof p === 'string' ? p : p[0];
+        T.ok(/^M[\d.\s,-]/.test(d), f.id + ': a minimal path does not start with a move');
+      });
+    });
+  });
 })();

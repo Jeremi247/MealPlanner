@@ -62,6 +62,18 @@
     });
   });
 
+  T.test('Store.AnUnknownIconStyleIsTheEmoji', function () {
+    withStorage(saved({ view: { icons: 'pixel' } }), function () {
+      T.eq(NM.Store.load().view.icons, 'emoji', 'an unknown icon style is the emoji');
+    });
+    withStorage(saved({ view: { icons: 'minimal' } }), function () {
+      T.eq(NM.Store.load().view.icons, 'minimal', 'minimal icons are kept');
+    });
+    withStorage(saved({ view: {} }), function () {
+      T.eq(NM.Store.load().view.icons, 'emoji', 'saved state from before the switch gets the emoji');
+    });
+  });
+
   T.test('Store.AV1PlateBecomesTheFirstMealAndItsTargetIsDropped', function () {
     var v1 = JSON.stringify({ target: { kcal: 600, protein: 45 }, plate: [{ id: 'oil', ml: 15 }, { id: 'cod', ml: 0 }] });
     withStorage(function () {

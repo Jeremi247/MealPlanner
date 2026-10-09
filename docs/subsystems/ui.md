@@ -4,13 +4,14 @@ Scope: `site/js/app.js`, `site/js/ui/` and `site/css/app.css` — the grid, the 
 
 ## State
 
-One object, owned by `app.js`: the daily `target`, `meals` (one `[{ id, ml }]` per meal), `selected` (a meal's index, or `'day'`) and `view` (sort, search, whether reference rows show, and `colours`: `'day'` or `'selection'`). Every change goes through `update()`, which schedules one render for after the current event: save, rank, re-render both views. Nothing else holds state, except two things kept unsaved: the ranking from before the latest change to the meals or target, for the change arrows (dropped when what the tiles are scored against changes, which includes the number of meals), and the food last clicked while the day was selected, for the day card's hint. The day's shape is [0011](../decisions/0011-a-day-of-meals-against-a-daily-target.md).
+One object, owned by `app.js`: the daily `target`, `meals` (one `[{ id, ml }]` per meal), `selected` (a meal's index, or `'day'`) and `view` (sort, search, whether reference rows show, `colours`: `'day'` or `'selection'`, and `icons`: `'emoji'` or `'minimal'`). Every change goes through `update()`, which schedules one render for after the current event: save, rank, re-render both views. Nothing else holds state, except two things kept unsaved: the ranking from before the latest change to the meals or target, for the change arrows (dropped when what the tiles are scored against changes, which includes the number of meals), and the food last clicked while the day was selected, for the day card's hint. The day's shape is [0011](../decisions/0011-a-day-of-meals-against-a-daily-target.md).
 
 ## The grid
 
 One section per category, in the table's order. A tile shows, from top to bottom:
 
-- the food's picture ([0013](../decisions/0013-foods-are-shown-as-fluent-3d-emoji.md)), its name, and **ml per 100 kcal** — the volume 100 kcal of the food buys
+- set into a gap in the top of its frame, its band as a meter of one to five lit diamonds (one per step up from the worst band) and a short word from `Format.TIER_SHORT`
+- the food's picture ([0013](../decisions/0013-foods-are-shown-as-fluent-3d-emoji.md)), its name, and **ml per 100 kcal** — the volume 100 kcal of the food buys, in the band's colour
 - preparation, or for a fat portion the portion and its volume
 - kcal as listed, and the table's comparison to the category average
 - protein, fat and carbs as listed; `~` marks a non-zero estimate
@@ -19,7 +20,9 @@ One section per category, in the table's order. A tile shows, from top to bottom
 - after a change to the meals or target, a green ↑ or red ↓ beside the name if the tile moved band, from `Fit.compare`. It stays until the next change, and leaving or entering the empty plate shows none
 - on hover or focus, its band, why it moved if it did, and up to three reasons behind its colour, as an overlay that does not move the grid
 
-**The tint** is the tile's band ([fit scoring](fit-scoring.md#bands)), one flat colour each, held in `--fit-<band>` tokens on `:root`. From best: strong green, light green, yellow-green (`--fair`), yellow-orange (`--caution`), red. A `.fit-<band>` class gives a tile its colour. The **Colours** toggle in the header scores every tile against the whole day (**Day**, the default) or the selected meal against its share (**Selection**); with the day selected both are the day ([0012](../decisions/0012-colours-can-follow-the-selected-meal.md)). The hover reasons and the line under the legend name which. The legend is one gradient through the same five tokens, worst on the left. The hover overlay and the tile's aria label open with the band's name, from `Format.TIER_LABEL`. Tokens are in `:root`, with a dark set under `prefers-color-scheme`.
+**The band colour** is the tile's band ([fit scoring](fit-scoring.md#bands)), one neon colour each, held in `--fit-<band>` tokens on `:root`. From best: green, lime, yellow (`--fair`), orange (`--caution`), red. A `.fit-<band>` class sets the tile's `--fit-c`, which colours the line inside its gold frame, the glow inside it and its ml per 100 kcal ([0014](../decisions/0014-the-site-is-styled-neon-deco.md)). The **Colours** toggle in the header scores every tile against the whole day (**Day**, the default) or the selected meal against its share (**Selection**); with the day selected both are the day ([0012](../decisions/0012-colours-can-follow-the-selected-meal.md)). The hover reasons and the line under the legend name which. The legend is one gradient through the same five tokens, worst on the left. The hover overlay and the tile's aria label open with the band's name, from `Format.TIER_LABEL`. Tokens are in `:root`; the site is dark only.
+
+**The Icons toggle** shows the 3D emoji (**3D**, the default) or the same emoji as one-colour icons (**Minimal**), in the grid and the meal rows ([0015](../decisions/0015-food-pictures-can-be-minimal-icons.md)). A minimal icon is an inline SVG in `currentColor`: on a tile it takes the band colour, in a row it is gold.
 
 Reference rows (†) are dimmed and can be hidden. Sort orders apply within each category.
 
