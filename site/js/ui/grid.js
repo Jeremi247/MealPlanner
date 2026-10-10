@@ -64,16 +64,33 @@
     return line;
   }
 
-  function splitBar(food) {
-    var s = NM.Nutrition.macroKcalSplit(food.perMl);
-    var bar = el('div', 'split');
+  // Grams a macro bar fills to its tick, on the food's listed basis. Past it, the last quarter
+  // of the bar holds up to as much again (docs/decisions/0019-tile-macros-are-drawn-in-grams.md).
+  var GRAMS_FULL = 10;
+  var GRAMS_KNEE = 0.75;
+
+  function gramBars(food) {
+    var basis = food.portion ? 'per portion' : 'per 100 ml';
+    var bars = el('div', 'tile-grams');
+    bars.style.setProperty('--gram-knee', GRAMS_KNEE * 100 + '%');
     ['protein', 'fat', 'carbs'].forEach(function (k) {
-      var seg = el('span', 'split-' + k);
-      seg.style.width = (s[k] * 100).toFixed(1) + '%';
-      bar.appendChild(seg);
+      var g = NM.Nutrition.mid(food.listed[k]);
+      var under = Math.min(g / GRAMS_FULL, 1);
+      var over = Math.max(0, Math.min((g - GRAMS_FULL) / GRAMS_FULL, 1));
+      var bar = el('div', 'tile-gram tile-gram-' + k);
+      var fill = el('span', 'tile-gram-fill');
+      fill.style.width = (under * GRAMS_KNEE * 100).toFixed(1) + '%';
+      bar.appendChild(fill);
+      if (over > 0) {
+        var past = el('span', 'tile-gram-over');
+        past.style.width = (over * (1 - GRAMS_KNEE) * 100).toFixed(1) + '%';
+        bar.appendChild(past);
+      }
+      var estimated = food.est.indexOf(k) >= 0 && g > 0;
+      bar.title = F.LABEL[k] + ' ' + F.listed(food.listed[k]) + ' g ' + basis + (estimated ? ', estimated' : '') + '. The tick is ' + GRAMS_FULL + ' g.';
+      bars.appendChild(bar);
     });
-    bar.title = 'Calories from protein ' + Math.round(s.protein * 100) + '%, fat ' + Math.round(s.fat * 100) + '%, carbs ' + Math.round(s.carbs * 100) + '%';
-    return bar;
+    return bars;
   }
 
   function weight(food, ml) {
@@ -93,6 +110,18 @@
     legend.appendChild(meter);
     legend.appendChild(el('span', 'tile-band-word', F.TIER_SHORT[tier]));
     return legend;
+  }
+
+  // The name may break at a hyphen only where no part is under three letters, so JELL-O never
+  // strands its O on a line of its own.
+  function tileName(name) {
+    var n = el('span', 'tile-name');
+    name.split(/(\s+)/).forEach(function (word) {
+      var parts = word.split('-');
+      var whole = parts.length > 1 && parts.some(function (p) { return p.length < 3; });
+      n.appendChild(whole ? el('span', 'tile-name-whole', word) : document.createTextNode(word));
+    });
+    return n;
   }
 
   function tile(food, r, change, inScopeMl, ctx) {
@@ -116,11 +145,13 @@
       pic.appendChild(arrow);
     }
     head.appendChild(pic);
-    head.appendChild(el('span', 'tile-name', food.name));
+    head.appendChild(tileName(food.name));
     var density = NM.Nutrition.mlPer100Kcal(food.perMl.kcal);
     var d = el('span', 'tile-density');
     d.appendChild(el('b', null, F.num(density, 0)));
-    d.appendChild(document.createTextNode(' ml/100 kcal'));
+    // The unit takes two short lines, so the number's column leaves the name more room.
+    d.appendChild(el('span', 'tile-density-unit', 'ml per'));
+    d.appendChild(el('span', 'tile-density-unit', '100 kcal'));
     d.title = 'Volume that 100 kcal of this buys';
     head.appendChild(d);
     t.appendChild(head);
@@ -133,15 +164,15 @@
     t.appendChild(kcal);
 
     t.appendChild(macroLine(food));
-    t.appendChild(splitBar(food));
+    t.appendChild(gramBars(food));
 
     var foot = el('div', 'tile-foot');
-    var amount = food.portion ? '1 portion' : F.num(food.defaultMl) + ' ml';
+    var amount = F.amount(food, food.defaultMl);
     var add = el('span', 'tile-add', '+ ' + amount + ' ');
     add.appendChild(weight(food, food.defaultMl));
     foot.appendChild(add);
     // The held line is there even when empty, so the first add does not grow the tile.
-    var on = el('span', 'tile-onplate', inScopeMl ? ctx.scopeLabel + ': ' + F.num(inScopeMl) + ' ml ' : '');
+    var on = el('span', 'tile-onplate', inScopeMl ? ctx.scopeLabel + ': ' + F.amount(food, inScopeMl) + ' ' : '');
     if (inScopeMl) on.appendChild(weight(food, inScopeMl));
     foot.appendChild(on);
     t.appendChild(foot);

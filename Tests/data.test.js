@@ -75,8 +75,21 @@
     });
   });
 
+  // A portion's listed text starts with how many units it holds, as in "20 almonds" or "½ avocado".
+  T.test('Data.APortionIsCountedInTheUnitsItLists', function () {
+    NM.categories.filter(function (c) { return c.basis === 'perPortion'; }).forEach(function (c) {
+      c.foods.forEach(function (f) {
+        var u = f.unit || {};
+        var lead = f.portion.split(' ')[0];
+        T.eq(u.per, lead === '½' ? 0.5 : Number(lead), f.id + ': units to a portion');
+        T.ok(typeof u.name === 'string' && u.name.length > 0, f.id + ': names its unit');
+        T.eq(u.step || 1, u.name === 'tbsp' || u.name === 'tsp' || f.id === 'avocado' ? 0.5 : 1, f.id + ': step');
+      });
+    });
+  });
+
   T.test('Data.EstimatesNameRealFields', function () {
-    var allowed = ['kcal', 'protein', 'fat', 'carbs', 'portionMl', 'grams'];
+    var allowed = ['kcal', 'protein', 'fat', 'carbs', 'portionMl', 'grams', 'raw'];
     foods.forEach(function (f) {
       f.est.forEach(function (k) { T.ok(allowed.indexOf(k) >= 0, f.id + ' estimates unknown field ' + k); });
       T.ok(f.est.indexOf('kcal') < 0, f.id + ': kcal always comes from the table');
@@ -89,6 +102,16 @@
     foods.forEach(function (f) {
       T.ok(f.est.indexOf('grams') >= 0, f.id + ': weight is an estimate, so marked as one');
       T.ok(f.gPerMl >= 0.05 && f.gPerMl <= 1.2, f.id + ': ' + f.gPerMl + ' g per ml');
+    });
+  });
+
+  // Boiling swells a grain about threefold and barely moves a potato, peel aside. A factor
+  // outside that is a typo, or cooked-per-raw entered the wrong way round.
+  T.test('Data.AWeightBeforeBoilingIsMarkedPlausibleAndNamed', function () {
+    foods.filter(function (f) { return f.raw; }).forEach(function (f) {
+      T.ok(f.est.indexOf('raw') >= 0, f.id + ': weight before boiling is an estimate, so marked as one');
+      T.ok(f.raw.perG >= 0.25 && f.raw.perG <= 1.3, f.id + ': ' + f.raw.perG + ' g before boiling per g');
+      T.ok(typeof f.raw.word === 'string' && f.raw.word.length > 0, f.id + ': says what the weight is of');
     });
   });
 

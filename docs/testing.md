@@ -19,8 +19,8 @@ Either can be run on its own. Before calling a change done, run the gate and ope
 
 | File | Holds |
 |---|---|
-| `Tests/data.test.js` | Every row of Jeremi's table is present once, reproduces the table's own kcal comparison column, keeps the macros the table gives, and respects its category's limits; estimated macros roughly account for the listed kcal; every row has a marked, plausible weight; every food has a picture, its file exists, and it has a minimal version |
-| `Tests/nutrition.test.js` | Ranges at midpoint, portions spread over their volume, the table's own starch portion examples, plate sums, weight scaling with volume, a typed weight's volume |
+| `Tests/data.test.js` | Every row of Jeremi's table is present once, reproduces the table's own kcal comparison column, keeps the macros the table gives, and respects its category's limits; a portion's unit count matches its listed text; estimated macros roughly account for the listed kcal; every row has a marked, plausible weight, and a weight before boiling is marked, plausible and named; every food has a picture, its file exists, and it has a minimal version |
+| `Tests/nutrition.test.js` | Ranges at midpoint, portions spread over their volume, a step of one unit or half a spoon landing on a whole step, the table's own starch portion examples, plate sums, weight and weight before boiling scaling with volume, a typed weight's volume |
 | `Tests/fit.test.js` | The specifying example, overshoot, the fixed colour scale, the five bands, band changes between picks, a nearly-met plate, the empty regime, a portion weighed against one meal's share of the day |
 | `Tests/store.test.js` | Unavailable and malformed storage both fall back to defaults; a selection that names no meal falls back to the first; an unknown colour mode is the day; an unknown icon style is the 3D emoji; a v1 plate becomes the first meal without its meal target |
 
@@ -30,7 +30,7 @@ A new test file is added to `Tests/index.html` below the scripts it uses. A scri
 
 ## What a green run does not prove
 
-- **The views are not under test.** `ui/` and `app.js` are checked by opening the site, picking foods and reading the tiles. The empty day, one fatty pick, and an overshoot are the states worth looking at, then selecting the day, clicking a tile, adding and removing a meal, and switching the colour toggle with a meal selected. Click one tile several times quickly: the effects stack rather than restart. Click between meal cards with the sidebar scrolled down, then add a food: the cards glide and the sidebar stays put. Remove the selected meal: its card folds away and no other meal's rows flash.
+- **The views are not under test.** `ui/` and `app.js` are checked by opening the site, picking foods and reading the tiles. The empty day, one fatty pick, and an overshoot are the states worth looking at, then selecting the day, clicking a tile, adding and removing a meal, and switching the colour toggle with a meal selected. Click one tile several times quickly: the effects stack rather than restart. Click between meal cards with the sidebar scrolled down, then add a food: the cards glide and the sidebar stays put. Remove the selected meal: its card folds away and no other meal's rows flash. Click Clear on the last meal with it at the window's foot: the box opens above, and Escape, a click elsewhere or the button again cancels.
 - **A table macro mistyped when first entered passes.** The table has no column to check protein or fat against, so the test holds a second copy, which catches an edit and not the first transcription.
 - **An estimate can be wrong and pass.** The data test catches a typo, not a careful bad estimate ([0004](decisions/0004-estimates-are-marked-not-hidden.md)).
 - **The colours' meaning is a judgement.** The fit tests hold the specified example, not that the formula is the best one ([0003](decisions/0003-fit-is-scored-against-what-the-plate-lacks.md)).

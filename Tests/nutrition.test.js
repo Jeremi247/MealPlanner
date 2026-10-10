@@ -17,7 +17,26 @@
     T.near(oil.perMl.kcal, 8, 1e-9, 'oil kcal per ml');
     T.near(oil.perMl.fat, 14 / 15, 1e-9, 'oil fat per ml');
     T.eq(oil.defaultMl, 15, 'one click adds one portion');
-    T.eq(oil.stepMl, 7.5, 'a step is half a portion');
+  });
+
+  T.test('Nutrition.AStepIsOneUnitOrHalfASpoon', function () {
+    T.eq(food('eggs').stepMl, 50, 'one egg of a two-egg portion');
+    T.eq(food('almonds').stepMl, 2, 'one almond of twenty');
+    T.eq(food('oil').stepMl, 7.5, 'half a tbsp');
+    T.eq(food('chia').stepMl, 7.5, 'half a tbsp of a two-tbsp portion');
+    T.near(N.units(food('almonds'), 46), 23, 1e-9, '46 ml is 23 almonds');
+    T.eq(N.units(food('broccoli'), 100), null, 'a food measured in ml');
+  });
+
+  T.test('Nutrition.APlusOrMinusLandsOnAWholeStep', function () {
+    var e = food('eggs'), c = food('cashews');
+    T.eq(N.stepped(e, 100, 1), 150, '2 eggs, plus');
+    T.eq(N.stepped(e, 100, -1), 50, '2 eggs, minus');
+    T.eq(N.stepped(e, 120, 1), 150, 'between steps, plus');
+    T.eq(N.stepped(e, 120, -1), 100, 'between steps, minus');
+    T.eq(N.stepped(e, 30, -1), 0, 'never below zero');
+    T.near(N.units(c, N.stepped(c, N.stepped(c, 25, 1), 1)), 11, 1e-9, 'a non-integer unit volume steps cleanly');
+    T.eq(N.stepped(food('broccoli'), 250, 1), 300, 'a food measured in ml steps by its category');
   });
 
   // The reference table's own portion examples, before rounding.
@@ -45,6 +64,12 @@
     T.near(N.grams(food('oil'), 15), 14, 1e-9, 'one oil portion');
     T.near(N.grams(food('oil'), 7.5), 7, 1e-9, 'half an oil portion');
     T.near(N.grams(food('broccoli'), 250), 95, 1e-9, 'broccoli 250 ml');
+  });
+
+  T.test('Nutrition.WeightBeforeBoilingScalesWithTheWeightAsPrepared', function () {
+    T.near(N.rawGrams(food('white-rice'), 150), 150 * 0.67 * 0.35, 1e-9, 'rice 150 ml, dry');
+    T.near(N.rawGrams(food('potatoes'), 100), 66 * 1.15, 1e-9, 'potatoes 100 ml, unpeeled');
+    T.eq(N.rawGrams(food('broccoli'), 250), null, 'a food without one');
   });
 
   T.test('Nutrition.DensityIsVolumePer100Kcal', function () {

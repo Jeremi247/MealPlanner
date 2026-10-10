@@ -95,17 +95,14 @@
     title.appendChild(F.icon(NM.Icons.picture(food.id, icons), 'item-icon'));
     title.appendChild(document.createTextNode(food.name));
     name.appendChild(title);
-    var sub = food.portion
-      ? F.num(ml / food.portionMl, 2) + ' × ' + food.portion
-      : food.prep;
-    name.appendChild(el('small', null, sub));
+    name.appendChild(el('small', null, food.unit ? F.amount(food, ml) : food.prep));
     row.appendChild(name);
 
     var ctl = el('div', 'item-ctl');
     var minus = el('button', 'step', '−'); minus.type = 'button';
     minus.setAttribute('aria-label', 'Less ' + food.name);
     minus.dataset.focus = 'less:' + food.id;
-    minus.addEventListener('click', function () { onSet(food, Math.max(0, ml - food.stepMl)); });
+    minus.addEventListener('click', function () { onSet(food, NM.Nutrition.stepped(food, ml, -1)); });
     var input = el('input', 'item-ml');
     input.type = 'number'; input.min = '0'; input.step = String(food.stepMl); input.value = F.num(ml, 1);
     input.setAttribute('aria-label', food.name + ' in ml');
@@ -117,7 +114,7 @@
     var plus = el('button', 'step', '+'); plus.type = 'button';
     plus.setAttribute('aria-label', 'More ' + food.name);
     plus.dataset.focus = 'more:' + food.id;
-    plus.addEventListener('click', function () { onSet(food, ml + food.stepMl); });
+    plus.addEventListener('click', function () { onSet(food, NM.Nutrition.stepped(food, ml, 1)); });
     ctl.appendChild(minus); ctl.appendChild(input); ctl.appendChild(el('span', 'unit', 'ml')); ctl.appendChild(plus);
     row.appendChild(ctl);
 
@@ -137,8 +134,16 @@
     w.appendChild(el('span', null, 'g'));
     row.appendChild(w);
 
-    row.appendChild(el('div', 'item-nums',
+    var nums = el('div', 'item-nums');
+    nums.appendChild(el('span', null,
       F.num(a.kcal, 0) + ' kcal · P ' + F.num(a.protein) + ' · F ' + F.num(a.fat) + ' · C ' + F.num(a.carbs)));
+    if (food.raw) {
+      var raw = el('span', 'item-raw', food.raw.word + ' ');
+      raw.title = F.RAW_TITLE;
+      raw.appendChild(el('b', null, F.grams(NM.Nutrition.rawGrams(food, ml))));
+      nums.appendChild(raw);
+    }
+    row.appendChild(nums);
 
     var rm = el('button', 'item-rm', '×'); rm.type = 'button';
     rm.setAttribute('aria-label', 'Remove ' + food.name);
@@ -155,12 +160,13 @@
     });
   }
 
-  // A head's text button: disabled, not hidden, when there is nothing for it to do.
+  // A head's text button: disabled, not hidden, when there is nothing for it to do. `onClick`
+  // is given the button, for a confirmation to drop from.
   function headLink(label, focusKey, enabled, onClick) {
     var b = el('button', 'link', label); b.type = 'button';
     b.dataset.focus = focusKey;
     b.disabled = !enabled;
-    b.addEventListener('click', onClick);
+    b.addEventListener('click', function () { onClick(b); });
     return b;
   }
 
@@ -203,12 +209,12 @@
     var count = meal.items.length;
     var sub = el('small', 'card-sub', count ? count + (count === 1 ? ' food' : ' foods') : 'empty');
     var head = cardHead(meal.name, sub, 'select:meal:' + i, selected, onSelect);
-    head.appendChild(headLink('Clear', 'clear:' + i, count > 0, function () { ctx.onClear(i); }));
+    head.appendChild(headLink('Clear', 'clear:' + i, count > 0, function (b) { ctx.onClear(i, b); }));
     if (ctx.meals.length > 1) {
       var rm = el('button', 'item-rm', '×'); rm.type = 'button';
       rm.setAttribute('aria-label', 'Remove ' + meal.name);
       rm.dataset.focus = 'remove-meal:' + i;
-      rm.addEventListener('click', function () { ctx.onRemoveMeal(i); });
+      rm.addEventListener('click', function () { ctx.onRemoveMeal(i, rm); });
       head.appendChild(rm);
     }
     card.appendChild(head);
@@ -316,7 +322,8 @@
 
   // `ctx`: { target (daily), meals [{ name, items [{food, ml}], totals }], dayTotals, selected (index
   // or 'day'), refused (ms since a tile click was refused for the day being selected, while it plays, or null), icons (an Icons style), onTarget(k, v),
-  // onSelect(index | 'day'), onSet(food, ml) on the selected meal, onClear(index), onClearAll, onAddMeal, onRemoveMeal(index),
+  // onSelect(index | 'day'), onSet(food, ml) on the selected meal, onClear(index, button), onClearAll(button), onAddMeal,
+  // onRemoveMeal(index, button), each given the button clicked,
   // removed (the index of a meal removed since the last render, or null) }.
   //
   // The sidebar's scroll position never moves on its own (docs/decisions/0017): the room below

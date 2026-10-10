@@ -27,7 +27,16 @@
 
   // An estimated weight of food, marked as an estimate (docs/decisions/0004-estimates-are-marked-not-hidden.md).
   var GRAMS_TITLE = 'Estimated weight — not from the reference table';
+  var RAW_TITLE = 'Estimated weight before boiling — an average, not from the reference table';
   function grams(g) { return '~' + num(g, 0) + ' g'; }
+
+  // An amount of a food as it is counted: "23x almond", "1.5x tbsp", or "150 ml" for a food
+  // measured in ml. The count leads with an x rather than pluralising the unit's name.
+  function amount(food, ml) {
+    var n = NM.Nutrition.units(food, ml);
+    if (n === null) return num(ml) + ' ml';
+    return num(n, 1) + 'x ' + food.unit.name;
+  }
 
   function el(tag, cls, text) {
     var e = document.createElement(tag);
@@ -64,5 +73,5 @@
     return img;
   }
 
-  NM.Format = { LABEL: LABEL, TIER_LABEL: TIER_LABEL, TIER_SHORT: TIER_SHORT, UNIT: UNIT, num: num, listed: listed, grams: grams, GRAMS_TITLE: GRAMS_TITLE, el: el, icon: icon };
+  NM.Format = { LABEL: LABEL, TIER_LABEL: TIER_LABEL, TIER_SHORT: TIER_SHORT, UNIT: UNIT, num: num, listed: listed, amount: amount, grams: grams, GRAMS_TITLE: GRAMS_TITLE, RAW_TITLE: RAW_TITLE, el: el, icon: icon };
 })(window.NM = window.NM || {});

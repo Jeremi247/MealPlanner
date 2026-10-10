@@ -19,14 +19,17 @@
       cat.foods.forEach(function (f, order) {
         var perPortion = cat.basis === 'perPortion';
         var basisMl = perPortion ? f.portionMl : 100;
+        var unit = perPortion ? { name: f.unit.name, ml: f.portionMl / f.unit.per } : null;
         var rec = {
           id: f.id, name: f.name, category: cat.id, order: order,
           prep: f.prep || '', portion: f.portion || null, portionMl: f.portionMl || null,
           est: f.est || [],
           perMl: {}, range: {}, listed: {},
           gPerMl: f.grams / basisMl,
+          raw: f.raw || null,
+          unit: unit,
           defaultMl: perPortion ? f.portionMl : cat.defaultMl,
-          stepMl: perPortion ? f.portionMl / 2 : cat.stepMl,
+          stepMl: perPortion ? unit.ml * (f.unit.step || 1) : cat.stepMl,
           baseline: cat.baseline
         };
         NUTRIENTS.forEach(function (n) {
@@ -51,6 +54,20 @@
   // Estimated weight of `ml` of a food, in grams.
   function grams(food, ml) { return food.gPerMl * ml; }
 
+  // Estimated weight of `ml` of a food before boiling, in grams, or null for a food without one.
+  function rawGrams(food, ml) { return food.raw ? grams(food, ml) * food.raw.perG : null; }
+
+  // How many of a portion food's units `ml` holds, or null for a food measured in ml.
+  function units(food, ml) { return food.unit ? ml / food.unit.ml : null; }
+
+  // The ml a +/- moves `ml` to: the next whole step up (`dir` 1) or down (-1), never below 0.
+  // A volume between steps, as a typed one can be, lands on a step rather than off by as much.
+  function stepped(food, ml, dir) {
+    var n = ml / food.stepMl;
+    var k = dir > 0 ? Math.floor(n + 1e-6) + 1 : Math.ceil(n - 1e-6) - 1;
+    return Math.max(0, k * food.stepMl);
+  }
+
   // The volume an estimated weight of a food fills: the inverse of `grams`.
   function mlFromGrams(food, g) { return g / food.gPerMl; }
 
@@ -70,13 +87,6 @@
   // Satiety density: how much volume 100 kcal of this buys. Infinity for a zero-kcal food.
   function mlPer100Kcal(kcalPerMl) { return kcalPerMl > 0 ? 100 / kcalPerMl : Infinity; }
 
-  // Share of a food's own calories from each macro, at 4/9/4 kcal per gram.
-  function macroKcalSplit(perMl) {
-    var p = perMl.protein * 4, f = perMl.fat * 9, c = perMl.carbs * 4, sum = p + f + c;
-    if (sum <= 0) return { protein: 0, fat: 0, carbs: 0 };
-    return { protein: p / sum, fat: f / sum, carbs: c / sum };
-  }
-
   // The reference table's "kcal vs original average" column, as a fraction.
   function vsBaseline(food) {
     var listedKcal = mid(food.listed.kcal);
@@ -84,7 +94,7 @@
   }
 
   NM.Nutrition = {
-    NUTRIENTS: NUTRIENTS, mid: mid, normalise: normalise, amount: amount, grams: grams, mlFromGrams: mlFromGrams, zero: zero, add: add,
-    totals: totals, mlPer100Kcal: mlPer100Kcal, macroKcalSplit: macroKcalSplit, vsBaseline: vsBaseline
+    NUTRIENTS: NUTRIENTS, mid: mid, normalise: normalise, amount: amount, grams: grams, rawGrams: rawGrams, units: units, stepped: stepped, mlFromGrams: mlFromGrams, zero: zero, add: add,
+    totals: totals, mlPer100Kcal: mlPer100Kcal, vsBaseline: vsBaseline
   };
 })(window.NM = window.NM || {});

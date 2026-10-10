@@ -11,12 +11,12 @@ One object, owned by `app.js`: the daily `target`, `meals` (one `[{ id, ml }]` p
 One section per category, in the table's order. A tile shows, from top to bottom:
 
 - set into a gap in the top of its frame, its band as a meter of one to five lit diamonds (one per step up from the worst band) and a short word from `Format.TIER_SHORT`
-- the food's picture ([0013](../decisions/0013-foods-are-shown-as-fluent-3d-emoji.md)), its name, and **ml per 100 kcal** — the volume 100 kcal of the food buys, in the band's colour
+- the food's picture ([0013](../decisions/0013-foods-are-shown-as-fluent-3d-emoji.md)), its name (broken at a hyphen only where neither part is under three letters), and **ml per 100 kcal** — the volume 100 kcal of the food buys, in the band's colour, its unit on two short lines to leave the name room
 - preparation, or for a fat portion the portion and its volume
 - kcal as listed
 - protein, fat and carbs as listed; `~` marks a non-zero estimate
-- a bar of where the food's calories come from
-- what a click adds, and under it how much the selected meal already holds (the whole day when the day is selected), each with its estimated weight
+- a bar per macro of its grams on the listed basis: a glowing tube up to a tick at 10 g, then white-hot past it, with up to 10 g more squeezed into the last quarter ([0019](../decisions/0019-tile-macros-are-drawn-in-grams.md))
+- what a click adds, and under it how much the selected meal already holds, a fat portion in its unit ([0020](../decisions/0020-a-portion-is-counted-in-its-own-unit.md)) (the whole day when the day is selected), each with its estimated weight
 - after a change to the meals or target, a green ↑ or red ↓ on the picture's corner if the tile moved band, from `Fit.compare`. It stays until the next change, and leaving or entering the empty plate shows none
 - on hover or focus, its band, why it moved if it did, and up to three reasons behind its colour, as an overlay that does not move the grid
 
@@ -30,7 +30,7 @@ Every food is shown alike ([0018](../decisions/0018-every-food-is-shown-alike.md
 
 ## The day and its meals
 
-The sidebar is a stack of cards: the day, then one card per meal, then **+ Add meal**. Clicking a card, or its title, selects it. A click on a control inside a card does only what the control does. One card is selected at a time, outlined in the accent colour. A card whose height changes glides to it, and the sidebar never scrolls on its own: there is always room below the last card to keep its position ([0017](../decisions/0017-cards-glide-to-their-new-height.md)).
+The sidebar is a stack of cards: the day, then one card per meal, then **+ Add meal**. Clicking a card, or its title, selects it. A click on a control inside a card does only what the control does. One card is selected at a time, outlined in the accent colour. A card whose height changes glides to it, and the sidebar never scrolls on its own: there is always room below the last card to keep its position ([0017](../decisions/0017-cards-glide-to-their-new-height.md)). **Asking first** is a small box dropped from the button clicked, with Cancel and the action ([0021](../decisions/0021-a-confirmation-drops-from-its-button.md)).
 
 **The day card**
 
@@ -45,7 +45,7 @@ The sidebar is a stack of cards: the day, then one card per meal, then **+ Add m
 - Its name, how many foods it holds and **Clear**, then bars for volume, protein and carbs against the meal's share of the day, on every meal whether selected or not. Clear empties that meal without selecting it, asking first, and is greyed out while the meal is empty.
 - Selected, its rows as well. Selection changes nothing else on the card.
 - **×** removes the meal, asking first if it holds food. The last meal has no ×. Meals are named by position, so removing one renumbers the rest.
-- **Rows**: the food's picture and name, −/+ by the food's step, or type an ml value. Zero removes the row. Under the ml is the estimated weight, which is also an input. A weight typed there is converted to ml ([0008](../decisions/0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md)).
+- **Rows**: the food's picture and name, under it its preparation or, for a fat portion, its count (`3x egg`, `1.5x tbsp`), and −/+ by the food's step to the next whole step, or type an ml value. Zero removes the row. Under the ml is the estimated weight, which is also an input. A weight typed there is converted to ml ([0008](../decisions/0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md)). A food with a weight before boiling ([food data](food-data.md)) shows it at the right end of its macros line, as `dry ~35 g`.
 
 A weight is always marked `~` and carries a tooltip ([0007](../decisions/0007-weight-is-shown-as-an-estimate.md)). There is no weight total.
 

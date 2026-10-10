@@ -23,6 +23,7 @@
   --carbs: #8b5cff;
   --volume: var(--gold-bright);
   --kcal: #9d9582;
+  --neon-core: #ffffff;
   --tile: #0a0c12;
   --sky: #161b29;
   --glow: rgba(240, 214, 140, .4);
@@ -186,14 +187,16 @@ button, input, select { font: inherit; color: inherit; }
 
 /* What a tile's name wraps to is the only height that varies, so the space goes under the head
    and the lines below line up along a row. */
-.tile-head { display: flex; gap: 10px; align-items: center; margin-bottom: auto; }
+.tile-head { display: flex; gap: 7px; align-items: center; margin-bottom: auto; }
 .tile-icon { width: 40px; height: 40px; flex: none; }
 .tile-icon.icon-minimal { width: 34px; height: 34px; margin: 3px; color: var(--fit-c); filter: drop-shadow(0 0 4px var(--fit-c)); }
 .tile-name {
-  font-family: var(--font-deco); font-weight: 700; font-size: 15px; letter-spacing: .06em; line-height: 1.15;
+  font-family: var(--font-deco); font-weight: 700; font-size: 13.5px; letter-spacing: .06em; line-height: 1.15;
   text-transform: uppercase; flex: 1; min-width: 0;
 }
-.tile-density { color: var(--muted); font-size: 11px; white-space: nowrap; text-align: right; line-height: 1.1; }
+.tile-name-whole { white-space: nowrap; }
+.tile-density { color: var(--muted); font-size: 10px; white-space: nowrap; text-align: right; line-height: 1.05; }
+.tile-density-unit { display: block; }
 .tile-density b {
   display: block; font-family: var(--font-neon); font-weight: 400; font-size: 24px;
   color: var(--fit-c); text-shadow: 0 0 6px var(--fit-c), 0 0 14px color-mix(in srgb, var(--fit-c) 60%, transparent);
@@ -208,10 +211,16 @@ button, input, select { font: inherit; color: inherit; }
 .macro-carbs b { color: var(--carbs); }
 .tile-basis { color: var(--muted); font-size: 11px; margin-left: auto; }
 
-.split { display: flex; height: 3px; overflow: hidden; background: var(--surface-2); margin: 2px 0; }
-.split-protein { background: var(--protein); }
-.split-fat { background: var(--fat); }
-.split-carbs { background: var(--carbs); }
+/* Grams of each macro: a neon tube up to the tick at 10 g, white-hot past it. --gram-knee, where
+   the tick sits, is set from GRAMS_KNEE in site/js/ui/grid.js. */
+.tile-grams { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 3px; }
+.tile-gram { --gram-c: var(--protein); position: relative; height: 4px; background: var(--surface-2); }
+.tile-gram-fat { --gram-c: var(--fat); }
+.tile-gram-carbs { --gram-c: var(--carbs); }
+.tile-gram-fill, .tile-gram-over { position: absolute; top: 0; bottom: 0; }
+.tile-gram-fill { left: 0; background: var(--gram-c); box-shadow: 0 0 4px var(--gram-c); }
+.tile-gram-over { left: var(--gram-knee); background: var(--neon-core); box-shadow: 0 0 3px var(--gram-c), 0 0 8px var(--gram-c); }
+.tile-gram::after { content: ""; position: absolute; left: var(--gram-knee); top: -2px; width: 1px; height: 8px; background: var(--muted); }
 
 /* Two lines whatever the tile holds: what a click adds, then what is held (blank until the first
    add). Neither wraps, so a click never changes the tile's height or the row's. */
@@ -322,6 +331,33 @@ button, input, select { font: inherit; color: inherit; }
 .link:hover:enabled { text-decoration: underline; }
 .link:disabled { color: var(--muted); cursor: default; opacity: .55; }
 
+/* The box a Clear or a remove asks in, dropped from its button by site/js/ui/confirm.js, which sets
+   its position and --confirm-arrow, the arrow's distance from its left edge. */
+.confirm {
+  position: fixed; z-index: 20; width: max-content; max-width: 240px; padding: 12px 14px;
+  background: var(--surface-2); border: 1px solid var(--gold);
+  box-shadow: inset 0 0 0 3px var(--surface-2), inset 0 0 0 4px var(--frame-faint), 0 8px 24px var(--shadow-deep), 0 0 14px var(--glow-faint);
+  animation: confirm-in .14s ease-out;
+}
+.confirm::before {
+  content: ""; position: absolute; top: -6px; left: var(--confirm-arrow); width: 10px; height: 10px; margin-left: -5px;
+  background: var(--surface-2); border-left: 1px solid var(--gold); border-top: 1px solid var(--gold); transform: rotate(45deg);
+}
+.confirm.is-above::before { top: auto; bottom: -6px; transform: rotate(225deg); }
+.confirm-msg { font-size: 13px; margin-bottom: 10px; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.confirm-btn { padding: 4px 12px; border: 1px solid var(--gold-dim); border-radius: 0; background: none; cursor: pointer; font-size: 12px; letter-spacing: .06em; }
+.confirm-btn:hover { border-color: var(--gold); color: var(--gold-bright); }
+.confirm-btn:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 1px; }
+.confirm-btn-danger { border-color: var(--bad); color: var(--bad); text-shadow: 0 0 6px color-mix(in oklab, var(--bad) 60%, transparent); }
+.confirm-btn-danger:hover { border-color: var(--bad); background: var(--bad); color: var(--bg); text-shadow: none; }
+@keyframes confirm-in { from { opacity: 0; transform: translateY(-4px); } }
+.confirm.is-above { animation-name: confirm-in-above; }
+@keyframes confirm-in-above { from { opacity: 0; transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) {
+  .confirm, .confirm.is-above { animation-name: fx-fade; animation-direction: reverse; }
+}
+
 .card { cursor: pointer; transition: border-color .15s ease, box-shadow .2s ease; }
 .card.is-gliding { overflow: hidden; flex-shrink: 0; }
 .card:hover { border-color: var(--gold); }
@@ -403,4 +439,6 @@ button, input, select { font: inherit; color: inherit; }
 .step, .item-rm { width: 26px; height: 26px; border-radius: 0; border: 1px solid var(--gold-dim); background: var(--surface-2); cursor: pointer; line-height: 1; }
 .step:hover, .item-rm:hover { border-color: var(--gold); color: var(--gold-bright); }
 .item-rm { grid-area: rm; background: none; color: var(--muted); }
-.item-nums { grid-area: nums; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.item-nums { grid-area: nums; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.item-raw { font-size: 11px; white-space: nowrap; }
+.item-raw b { font-weight: 400; color: var(--gold); }

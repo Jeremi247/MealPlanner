@@ -50,25 +50,32 @@
 
   function addMeal() { state.meals.push([]); select(state.meals.length - 1); }
 
-  function clearMeal(i) {
-    if (!window.confirm('Clear ' + mealName(i) + '?')) return;
-    state.meals[i] = [];
-    update();
+  // Each asks first, beside `anchor`, the button that was clicked (NM.Confirm).
+  function clearMeal(i, anchor) {
+    NM.Confirm.ask(anchor, 'Clear ' + mealName(i) + '?', 'Clear', function () {
+      state.meals[i] = [];
+      update();
+    });
   }
 
-  function clearAll() {
-    if (!window.confirm('Clear every meal of the day?')) return;
-    state.meals = state.meals.map(function () { return []; });
-    update();
+  function clearAll(anchor) {
+    NM.Confirm.ask(anchor, 'Clear every meal of the day?', 'Clear all', function () {
+      state.meals = state.meals.map(function () { return []; });
+      update();
+    });
   }
 
-  function removeMeal(i) {
+  // An empty meal goes without asking.
+  function removeMeal(i, anchor) {
     if (state.meals.length <= 1) return;
-    if (state.meals[i].length && !window.confirm('Remove ' + mealName(i) + ' and everything on it?')) return;
-    state.meals.splice(i, 1);
-    removed = i;
-    if (typeof state.selected === 'number' && state.selected >= i) state.selected = Math.max(0, state.selected - 1);
-    update();
+    function remove() {
+      state.meals.splice(i, 1);
+      removed = i;
+      if (typeof state.selected === 'number' && state.selected >= i) state.selected = Math.max(0, state.selected - 1);
+      update();
+    }
+    if (!state.meals[i].length) remove();
+    else NM.Confirm.ask(anchor, 'Remove ' + mealName(i) + ' and everything on it?', 'Remove', remove);
   }
 
   // Every change schedules one render for after the current event. Rendering inside a

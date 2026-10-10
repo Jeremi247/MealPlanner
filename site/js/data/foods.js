@@ -2,6 +2,8 @@
 // portion, which is per its listed portion and carries that portion's volume.
 // A value is a number, or [min, max] where the source gives a range.
 // `grams` is the weight of that volume or portion, shown and never scored (docs/decisions/0007-weight-is-shown-as-an-estimate.md).
+// `raw`, on a food usually weighed before boiling, gives that weight: `perG` grams before
+// boiling per gram as prepared, an average, and the `word` it is shown with.
 // `est` names the fields not taken from Jeremi's reference table — see docs/subsystems/food-data.md.
 (function (NM) {
   'use strict';
@@ -63,32 +65,36 @@
   ];
   volume.forEach(function (f) { f.est = ['protein', 'fat', 'carbs']; });
 
-  // Per portion as listed; `portionMl` is the volume one portion fills.
+  // Per portion as listed; `portionMl` is the volume one portion fills, and `unit` what a
+  // portion is counted in: `per` units to a portion, the unit's singular `name`, and `step` units
+  // to a +/- (1 if absent). A count is written "3x egg", so the name needs no plural.
+  function tbsp(per) { return { per: per, name: 'tbsp', step: 0.5 }; }
+
   var fat = [
-    { id: 'oil', name: 'Olive or sesame oil', portion: '1 tbsp', portionMl: 15, kcal: 120, grams: 14, fat: 14, protein: 0, carbs: 0, est: ['protein', 'carbs'] },
-    { id: 'mayo-half', name: 'Half-fat mayonnaise', portion: '1 tbsp', portionMl: 15, kcal: [35, 45], grams: 15, fat: [3.5, 4.5], protein: 0.1, carbs: 1, est: ['protein', 'carbs'] },
-    { id: 'chia', name: 'Chia seeds', portion: '2 tbsp, dry', portionMl: 30, kcal: 130, grams: 27, fat: 8, protein: 4.4, carbs: 11, est: ['protein', 'carbs'] },
-    { id: 'olives', name: 'Olives', portion: '20 medium', portionMl: 100, kcal: [80, 100], grams: 78, fat: [7, 10], protein: 0.7, carbs: 5, est: ['protein', 'carbs', 'portionMl'] },
-    { id: 'avocado', name: 'Avocado', portion: '½ avocado', portionMl: 100, kcal: [120, 160], grams: 88, fat: [11, 15], protein: 2, carbs: 8.5, est: ['protein', 'carbs', 'portionMl'] },
-    { id: 'eggs', name: 'Whole eggs', portion: '2 large, hard-boiled', portionMl: 100, kcal: 155, grams: 100, fat: 11, protein: 12.6, carbs: 1.1, est: ['protein', 'carbs', 'portionMl'] },
-    { id: 'almonds', name: 'Almonds', portion: '20 almonds', portionMl: 40, kcal: 140, grams: 24, fat: 12, protein: 5, carbs: 5, est: ['protein', 'carbs', 'portionMl'] },
-    { id: 'cream-cheese-light', name: 'Light cream cheese', portion: '2 tbsp', portionMl: 30, kcal: 60, grams: 30, fat: 4.5, protein: 2.5, carbs: 2, est: ['protein', 'carbs'] },
-    { id: 'peanut-butter', name: 'Peanut butter', portion: '1 level tbsp', portionMl: 15, kcal: 94, grams: 16, fat: 8.1, protein: 3.6, carbs: 3.1, est: ['protein', 'carbs'] },
-    { id: 'almond-butter', name: 'Almond butter', portion: '1 level tbsp', portionMl: 15, kcal: 98, grams: 16, fat: 8.9, protein: 3.4, carbs: 3, est: ['protein', 'carbs'] },
-    { id: 'tahini', name: 'Tahini', portion: '1 level tbsp', portionMl: 15, kcal: 89, grams: 15, fat: 8.1, protein: 2.6, carbs: 3.2, est: ['protein', 'carbs'] },
-    { id: 'walnuts', name: 'Walnuts', portion: '7 halves', portionMl: 30, kcal: 93, grams: 14, fat: 9.2, protein: 2.1, carbs: 1.9, est: ['protein', 'carbs', 'portionMl'] },
-    { id: 'pistachios', name: 'Pistachios', portion: '25 shelled kernels', portionMl: 20, kcal: 81, grams: 14, fat: 6.4, protein: 2.9, carbs: 3.9, est: ['protein', 'carbs', 'portionMl'] },
-    { id: 'cashews', name: 'Cashews', portion: '9 whole kernels', portionMl: 25, kcal: 79, grams: 14, fat: 6.2, protein: 2.6, carbs: 4.3, est: ['protein', 'carbs', 'portionMl'] }
+    { id: 'oil', name: 'Olive or sesame oil', portion: '1 tbsp', portionMl: 15, unit: tbsp(1), kcal: 120, grams: 14, fat: 14, protein: 0, carbs: 0, est: ['protein', 'carbs'] },
+    { id: 'mayo-half', name: 'Half-fat mayonnaise', portion: '1 tbsp', portionMl: 15, unit: tbsp(1), kcal: [35, 45], grams: 15, fat: [3.5, 4.5], protein: 0.1, carbs: 1, est: ['protein', 'carbs'] },
+    { id: 'chia', name: 'Chia seeds', portion: '2 tbsp, dry', portionMl: 30, unit: tbsp(2), kcal: 130, grams: 27, fat: 8, protein: 4.4, carbs: 11, est: ['protein', 'carbs'] },
+    { id: 'olives', name: 'Olives', portion: '20 medium', portionMl: 100, unit: { per: 20, name: 'olive' }, kcal: [80, 100], grams: 78, fat: [7, 10], protein: 0.7, carbs: 5, est: ['protein', 'carbs', 'portionMl'] },
+    { id: 'avocado', name: 'Avocado', portion: '½ avocado', portionMl: 100, unit: { per: 0.5, name: 'avocado', step: 0.5 }, kcal: [120, 160], grams: 88, fat: [11, 15], protein: 2, carbs: 8.5, est: ['protein', 'carbs', 'portionMl'] },
+    { id: 'eggs', name: 'Whole eggs', portion: '2 large, hard-boiled', portionMl: 100, unit: { per: 2, name: 'egg' }, kcal: 155, grams: 100, fat: 11, protein: 12.6, carbs: 1.1, est: ['protein', 'carbs', 'portionMl'] },
+    { id: 'almonds', name: 'Almonds', portion: '20 almonds', portionMl: 40, unit: { per: 20, name: 'almond' }, kcal: 140, grams: 24, fat: 12, protein: 5, carbs: 5, est: ['protein', 'carbs', 'portionMl'] },
+    { id: 'cream-cheese-light', name: 'Light cream cheese', portion: '2 tbsp', portionMl: 30, unit: tbsp(2), kcal: 60, grams: 30, fat: 4.5, protein: 2.5, carbs: 2, est: ['protein', 'carbs'] },
+    { id: 'peanut-butter', name: 'Peanut butter', portion: '1 level tbsp', portionMl: 15, unit: tbsp(1), kcal: 94, grams: 16, fat: 8.1, protein: 3.6, carbs: 3.1, est: ['protein', 'carbs'] },
+    { id: 'almond-butter', name: 'Almond butter', portion: '1 level tbsp', portionMl: 15, unit: tbsp(1), kcal: 98, grams: 16, fat: 8.9, protein: 3.4, carbs: 3, est: ['protein', 'carbs'] },
+    { id: 'tahini', name: 'Tahini', portion: '1 level tbsp', portionMl: 15, unit: tbsp(1), kcal: 89, grams: 15, fat: 8.1, protein: 2.6, carbs: 3.2, est: ['protein', 'carbs'] },
+    { id: 'walnuts', name: 'Walnuts', portion: '7 halves', portionMl: 30, unit: { per: 7, name: 'half' }, kcal: 93, grams: 14, fat: 9.2, protein: 2.1, carbs: 1.9, est: ['protein', 'carbs', 'portionMl'] },
+    { id: 'pistachios', name: 'Pistachios', portion: '25 shelled kernels', portionMl: 20, unit: { per: 25, name: 'kernel' }, kcal: 81, grams: 14, fat: 6.4, protein: 2.9, carbs: 3.9, est: ['protein', 'carbs', 'portionMl'] },
+    { id: 'cashews', name: 'Cashews', portion: '9 whole kernels', portionMl: 25, unit: { per: 9, name: 'kernel' }, kcal: 79, grams: 14, fat: 6.2, protein: 2.6, carbs: 4.3, est: ['protein', 'carbs', 'portionMl'] }
   ];
 
   var starch = [
-    { id: 'potatoes', name: 'Boiled potatoes', prep: 'Peeled, pieces, not mashed', kcal: 57, grams: 66, protein: 1.1, fat: 0.1, carbs: 13.2 },
-    { id: 'white-rice', name: 'White rice', prep: 'Cooked long-grain, loosely filled', kcal: 87, grams: 67, protein: 1.8, fat: 0.2, carbs: 18.8 }
+    { id: 'potatoes', name: 'Boiled potatoes', prep: 'Peeled, pieces, not mashed', kcal: 57, grams: 66, protein: 1.1, fat: 0.1, carbs: 13.2, raw: { word: 'unpeeled', perG: 1.15 } },
+    { id: 'white-rice', name: 'White rice', prep: 'Cooked long-grain, loosely filled', kcal: 87, grams: 67, protein: 1.8, fat: 0.2, carbs: 18.8, raw: { word: 'dry', perG: 0.35 } }
   ];
 
-  // The table gives no weights, so every row's `grams` is an estimate.
+  // The table gives no weights, so every row's `grams` is an estimate, and so is `raw`.
   [protein, volume, fat, starch].forEach(function (rows) {
-    rows.forEach(function (f) { f.est = (f.est || []).concat('grams'); });
+    rows.forEach(function (f) { f.est = (f.est || []).concat(f.raw ? ['grams', 'raw'] : 'grams'); });
   });
 
   // `baseline` is the "original average" the reference table compares kcal against.
