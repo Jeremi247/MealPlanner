@@ -15,6 +15,11 @@
   // The food a tile click tried to add while the day was selected, until the next selection.
   var unplaced = null;
 
+  // Tile clicks whose effect may still be playing, oldest first: { id, kind, at }. A render
+  // hands each tile its own with their ages, so the effects carry on across renders (NM.Fx).
+  var effects = [];
+  function played(id, kind) { effects.push({ id: id, kind: kind, at: performance.now() }); }
+
   function items(meal) {
     return meal.map(function (p) { return { food: byId[p.id], ml: p.ml }; });
   }
@@ -32,7 +37,8 @@
   }
 
   function addPortion(food) {
-    if (state.selected === 'day') { unplaced = food; update(); return; }
+    if (state.selected === 'day') { unplaced = food; played(food.id, 'refused'); update(); return; }
+    played(food.id, 'add');
     var cur = state.meals[state.selected].find(function (p) { return p.id === food.id; });
     setMl(food, (cur ? cur.ml : 0) + food.defaultMl);
   }
@@ -97,11 +103,16 @@
     var inScope = {};
     scope.forEach(function (it) { inScope[it.food.id] = (inScope[it.food.id] || 0) + it.ml; });
 
+    var now = performance.now();
+    effects = effects.filter(function (e) { return now - e.at < NM.Fx.LIFETIME_MS; });
+    var playing = {};
+    effects.forEach(function (e) { (playing[e.id] = playing[e.id] || []).push({ kind: e.kind, age: now - e.at }); });
+
     NM.Grid.render(gridRoot, {
       categories: NM.categories, foods: foods, ranked: ranked, changes: NM.Fit.compare(before, ranked),
       inScope: inScope, scopeLabel: state.selected === 'day' ? 'today' : 'in ' + mealName(state.selected),
       addTo: state.selected === 'day' ? null : mealName(state.selected), subject: subject,
-      view: state.view, onAdd: addPortion
+      effects: playing, view: state.view, onAdd: addPortion
     });
     NM.Plate.render(plateRoot, {
       target: state.target, meals: meals, dayTotals: NM.Nutrition.totals(day), selected: state.selected, unplaced: unplaced,

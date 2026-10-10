@@ -15,6 +15,7 @@ A static site in `site/`, served by Python's `http.server` from `Serve.bat`, wit
 | `site/js/core/fit.js` | Scores one more portion of each food against the day | [fit scoring](../subsystems/fit-scoring.md) |
 | `site/js/store.js` | Per-browser persistence of target, meals, selection and view | [0005](../decisions/0005-state-lives-in-the-browser.md) |
 | `site/js/ui/format.js` | Number formatting and the `el()` DOM helper | [JS style](../conventions/js-style.md) |
+| `site/js/ui/fx.js` | The effect a clicked tile plays | [0016](../decisions/0016-tile-clicks-are-animated.md) |
 | `site/js/ui/grid.js` | The tinted food grid | [UI](../subsystems/ui.md) |
 | `site/js/ui/plate.js` | The day card and the meal cards | [UI](../subsystems/ui.md) |
 | `site/js/app.js` | State, and the re-render on every change | [UI](../subsystems/ui.md) |

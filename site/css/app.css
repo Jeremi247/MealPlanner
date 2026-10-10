@@ -146,7 +146,8 @@ button, input, select { font: inherit; color: inherit; }
 /* The band is a neon line inside the gold frame, with a faint glow filling the tile. */
 .tile {
   --fit-c: var(--gold-dim);
-  position: relative; display: flex; flex-direction: column; gap: 4px; text-align: left;
+  --frame: 1px;
+  position: relative; isolation: isolate; display: flex; flex-direction: column; gap: 4px; text-align: left;
   padding: 17px 15px 13px; border-radius: 0; cursor: pointer;
   background: var(--tile); border: 1px solid var(--gold-dim);
   box-shadow:
@@ -164,7 +165,7 @@ button, input, select { font: inherit; color: inherit; }
     0 0 14px color-mix(in srgb, var(--fit-c) 30%, transparent);
 }
 .tile:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
-.tile.is-on-plate { border: 2px solid var(--gold-bright); padding: 16px 14px 12px; }
+.tile.is-on-plate { --frame: 2px; border: 2px solid var(--gold-bright); padding: 16px 14px 12px; }
 .tile.is-reference { opacity: .6; }
 .tile.is-idle { cursor: default; }
 
@@ -220,7 +221,6 @@ button, input, select { font: inherit; color: inherit; }
   background: var(--surface); border: 1px solid var(--gold); border-top: 2px solid var(--fit-c);
   box-shadow: 0 8px 24px var(--shadow-deep);
 }
-.tile:hover, .tile:focus-visible { z-index: 4; }
 .tile:hover .tile-why, .tile:focus-visible .tile-why { display: block; }
 .tile-why li::before { content: "◆ "; font-size: 9px; vertical-align: 1px; }
 .tile-why .why-tier { font-family: var(--font-deco); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fit-c); }
@@ -230,6 +230,67 @@ button, input, select { font: inherit; color: inherit; }
 .tile-change-down { background: var(--bad); box-shadow: 0 0 8px var(--bad); }
 .why-good::before { color: var(--good); }
 .why-bad::before { color: var(--bad); }
+
+/* ---- Click effects -------------------------------------------------------- */
+/* Built by site/js/ui/fx.js, each started as far in as it has already run. Every duration here
+   is within Fx.LIFETIME_MS. A tile playing one sits above its neighbours, which the rings cross. */
+
+.tile.has-fx { z-index: 3; }
+.tile:hover, .tile:focus-visible { z-index: 4; }
+
+/* Two rings with stepped deco corners, a 2 px line and 4 px steps, grow 30 px out of the frame. */
+.fx-ring {
+  position: absolute; z-index: 3; pointer-events: none;
+  filter: drop-shadow(0 0 4px var(--fx-c));
+  animation: fx-ring .52s cubic-bezier(.2, .6, .3, 1) both;
+}
+.fx-ring::before {
+  content: ""; position: absolute; inset: 0; background: var(--fx-c);
+  clip-path: polygon(evenodd, 8px 0, calc(100% - 8px) 0, calc(100% - 8px) 4px, calc(100% - 4px) 4px, calc(100% - 4px) 8px, 100% 8px, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 8px 100%, 8px calc(100% - 4px), 4px calc(100% - 4px), 4px calc(100% - 8px), 0 calc(100% - 8px), 0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0,
+    10px 2px, calc(100% - 10px) 2px, calc(100% - 10px) 6px, calc(100% - 6px) 6px, calc(100% - 6px) 10px, calc(100% - 2px) 10px, calc(100% - 2px) calc(100% - 10px), calc(100% - 6px) calc(100% - 10px), calc(100% - 6px) calc(100% - 6px), calc(100% - 10px) calc(100% - 6px), calc(100% - 10px) calc(100% - 2px), 10px calc(100% - 2px), 10px calc(100% - 6px), 6px calc(100% - 6px), 6px calc(100% - 10px), 2px calc(100% - 10px), 2px 10px, 6px 10px, 6px 6px, 10px 6px, 10px 2px);
+}
+.fx-ring-gold { --fx-c: var(--gold-bright); --fx-from: 0px; }
+.fx-ring-band { --fx-c: var(--fit-c); --fx-from: 5px; }
+@keyframes fx-ring {
+  from { inset: calc(var(--fx-from) - var(--frame)); opacity: 1; }
+  to { inset: calc(var(--fx-from) - var(--frame) - 30px); opacity: 0; }
+}
+
+/* A stepped panel of the band flashes under the content. */
+.fx-fill {
+  position: absolute; inset: 4px; z-index: -1; pointer-events: none;
+  background: color-mix(in srgb, var(--fit-c) 30%, transparent);
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, calc(100% - 8px) 4px, calc(100% - 4px) 4px, calc(100% - 4px) 8px, 100% 8px, 100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%, 8px 100%, 8px calc(100% - 4px), 4px calc(100% - 4px), 4px calc(100% - 8px), 0 calc(100% - 8px), 0 8px, 4px 8px, 4px 4px, 8px 4px);
+  animation: fx-fade .4s ease-out both;
+}
+@keyframes fx-fade { from { opacity: 1; } to { opacity: 0; } }
+
+/* What the click added rises from the foot and fades. */
+.fx-float {
+  position: absolute; right: 16px; bottom: 30px; z-index: 3; pointer-events: none; white-space: nowrap;
+  font-family: var(--font-neon); font-size: 17px; color: var(--gold-bright); text-shadow: 0 0 8px var(--gold-bright);
+  animation: fx-float .65s ease-out both;
+}
+@keyframes fx-float {
+  0% { opacity: 0; transform: translateY(6px); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-26px); }
+}
+
+/* A click the day selection refused shakes the tile. No fill, so the hover lift comes back. */
+.tile.is-refused { animation: fx-shake .25s ease-in-out; }
+@keyframes fx-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-3px); }
+  40%, 80% { transform: translateX(3px); }
+}
+@keyframes fx-refused-flash { from { border-color: var(--bad); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-ring { display: none; }
+  .fx-float { animation-name: fx-fade; }
+  .tile.is-refused { animation-name: fx-refused-flash; animation-timing-function: ease-out; }
+}
 
 .empty-note { color: var(--muted); }
 

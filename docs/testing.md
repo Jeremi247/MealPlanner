@@ -30,7 +30,7 @@ A new test file is added to `Tests/index.html` below the scripts it uses. A scri
 
 ## What a green run does not prove
 
-- **The views are not under test.** `ui/` and `app.js` are checked by opening the site, picking foods and reading the tiles. The empty day, one fatty pick, and an overshoot are the states worth looking at, then selecting the day, clicking a tile, adding and removing a meal, and switching the colour toggle with a meal selected.
+- **The views are not under test.** `ui/` and `app.js` are checked by opening the site, picking foods and reading the tiles. The empty day, one fatty pick, and an overshoot are the states worth looking at, then selecting the day, clicking a tile, adding and removing a meal, and switching the colour toggle with a meal selected. Click one tile several times quickly: the effects stack rather than restart.
 - **A table macro mistyped when first entered passes.** The table has no column to check protein or fat against, so the test holds a second copy, which catches an edit and not the first transcription.
 - **An estimate can be wrong and pass.** The data test catches a typo, not a careful bad estimate ([0004](decisions/0004-estimates-are-marked-not-hidden.md)).
 - **The colours' meaning is a judgement.** The fit tests hold the specified example, not that the formula is the best one ([0003](decisions/0003-fit-is-scored-against-what-the-plate-lacks.md)).

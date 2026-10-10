@@ -138,7 +138,8 @@
     t.appendChild(splitBar(food));
 
     var foot = el('div', 'tile-foot');
-    var add = el('span', 'tile-add', '+ ' + (food.portion ? '1 portion' : F.num(food.defaultMl) + ' ml') + ' ');
+    var amount = food.portion ? '1 portion' : F.num(food.defaultMl) + ' ml';
+    var add = el('span', 'tile-add', '+ ' + amount + ' ');
     add.appendChild(weight(food, food.defaultMl));
     foot.appendChild(add);
     if (inScopeMl) {
@@ -158,12 +159,14 @@
     var action = ctx.addTo ? 'Add ' + food.name + ' to ' + ctx.addTo : food.name + ', select a meal to add it';
     t.setAttribute('aria-label', action + '. ' + F.TIER_LABEL[r.tier] + '. ' + (change ? changeText(change, ctx.subject) + '. ' : '') + why.map(function (w) { return w.text; }).join('; '));
     t.addEventListener('click', function () { ctx.onAdd(food); });
+    NM.Fx.decorate(t, ctx.effects[food.id], '+' + amount);
     return t;
   }
 
   // `ctx`: { categories, foods, ranked, changes (id → Fit.compare entry), inScope (id → ml in the
   // selected meal, or the day), scopeLabel, addTo (the selected meal's name, null for the day),
-  // subject (what the tiles are scored against, 'the day' or a meal's name), view, onAdd }.
+  // subject (what the tiles are scored against, 'the day' or a meal's name), effects (id → that
+  // tile's clicks still playing, for Fx.decorate), view, onAdd }.
   function render(root, ctx) {
     root.textContent = '';
     var q = ctx.view.query.trim().toLowerCase();
