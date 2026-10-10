@@ -25,11 +25,6 @@
     return num(v * scale);
   }
 
-  function percent(f) {
-    var p = Math.round(f * 100);
-    return (p > 0 ? '+' : p < 0 ? '−' : '') + Math.abs(p) + '%';
-  }
-
   // An estimated weight of food, marked as an estimate (docs/decisions/0004-estimates-are-marked-not-hidden.md).
   var GRAMS_TITLE = 'Estimated weight — not from the reference table';
   function grams(g) { return '~' + num(g, 0) + ' g'; }
@@ -69,5 +64,5 @@
     return img;
   }
 
-  NM.Format = { LABEL: LABEL, TIER_LABEL: TIER_LABEL, TIER_SHORT: TIER_SHORT, UNIT: UNIT, num: num, listed: listed, percent: percent, grams: grams, GRAMS_TITLE: GRAMS_TITLE, el: el, icon: icon };
+  NM.Format = { LABEL: LABEL, TIER_LABEL: TIER_LABEL, TIER_SHORT: TIER_SHORT, UNIT: UNIT, num: num, listed: listed, grams: grams, GRAMS_TITLE: GRAMS_TITLE, el: el, icon: icon };
 })(window.NM = window.NM || {});

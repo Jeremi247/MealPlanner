@@ -22,7 +22,7 @@
         var rec = {
           id: f.id, name: f.name, category: cat.id, order: order,
           prep: f.prep || '', portion: f.portion || null, portionMl: f.portionMl || null,
-          reference: !!f.reference, est: f.est || [],
+          est: f.est || [],
           perMl: {}, range: {}, listed: {},
           gPerMl: f.grams / basisMl,
           defaultMl: perPortion ? f.portionMl : cat.defaultMl,

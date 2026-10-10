@@ -12,13 +12,13 @@
   var gridRoot = document.getElementById('grid');
   var plateRoot = document.getElementById('plate');
 
-  // The food a tile click tried to add while the day was selected, until the next selection.
-  var unplaced = null;
-
   // Tile clicks whose effect may still be playing, oldest first: { id, kind, at }. A render
   // hands each tile its own with their ages, so the effects carry on across renders (NM.Fx).
   var effects = [];
   function played(id, kind) { effects.push({ id: id, kind: kind, at: performance.now() }); }
+
+  // The meal removed since the last render, so the sidebar matches each card with its own meal.
+  var removed = null;
 
   function items(meal) {
     return meal.map(function (p) { return { food: byId[p.id], ml: p.ml }; });
@@ -37,24 +37,36 @@
   }
 
   function addPortion(food) {
-    if (state.selected === 'day') { unplaced = food; played(food.id, 'refused'); update(); return; }
+    if (state.selected === 'day') { played(food.id, 'refused'); update(); return; }
     played(food.id, 'add');
     var cur = state.meals[state.selected].find(function (p) { return p.id === food.id; });
     setMl(food, (cur ? cur.ml : 0) + food.defaultMl);
   }
 
-  // Reselecting the selected card does nothing, so it keeps the day card's hint.
   function select(which) {
     if (state.selected === which) return;
-    state.selected = which; unplaced = null; update();
+    state.selected = which; update();
   }
 
   function addMeal() { state.meals.push([]); select(state.meals.length - 1); }
+
+  function clearMeal(i) {
+    if (!window.confirm('Clear ' + mealName(i) + '?')) return;
+    state.meals[i] = [];
+    update();
+  }
+
+  function clearAll() {
+    if (!window.confirm('Clear every meal of the day?')) return;
+    state.meals = state.meals.map(function () { return []; });
+    update();
+  }
 
   function removeMeal(i) {
     if (state.meals.length <= 1) return;
     if (state.meals[i].length && !window.confirm('Remove ' + mealName(i) + ' and everything on it?')) return;
     state.meals.splice(i, 1);
+    removed = i;
     if (typeof state.selected === 'number' && state.selected >= i) state.selected = Math.max(0, state.selected - 1);
     update();
   }
@@ -105,8 +117,11 @@
 
     var now = performance.now();
     effects = effects.filter(function (e) { return now - e.at < NM.Fx.LIFETIME_MS; });
-    var playing = {};
-    effects.forEach(function (e) { (playing[e.id] = playing[e.id] || []).push({ kind: e.kind, age: now - e.at }); });
+    var playing = {}, refused = null;
+    effects.forEach(function (e) {
+      (playing[e.id] = playing[e.id] || []).push({ kind: e.kind, age: now - e.at });
+      if (e.kind === 'refused') refused = now - e.at;
+    });
 
     NM.Grid.render(gridRoot, {
       categories: NM.categories, foods: foods, ranked: ranked, changes: NM.Fit.compare(before, ranked),
@@ -115,15 +130,18 @@
       effects: playing, view: state.view, onAdd: addPortion
     });
     NM.Plate.render(plateRoot, {
-      target: state.target, meals: meals, dayTotals: NM.Nutrition.totals(day), selected: state.selected, unplaced: unplaced,
+      target: state.target, meals: meals, dayTotals: NM.Nutrition.totals(day), selected: state.selected, refused: refused,
       icons: state.view.icons,
       onTarget: function (k, v) { state.target[k] = v; update(); },
       onSelect: select,
       onSet: setMl,
-      onClear: function () { state.meals[state.selected] = []; update(); },
+      onClear: clearMeal,
+      onClearAll: clearAll,
       onAddMeal: addMeal,
-      onRemoveMeal: removeMeal
+      onRemoveMeal: removeMeal,
+      removed: removed
     });
+    removed = null;
     document.getElementById('regime').textContent = (ranked.regime === 'empty'
       ? (byMeal ? subject + ' is empty' : 'Nothing eaten yet') + ': tiles show how balanced each food is on its own.'
       : 'Tiles show how one more portion would balance ' + (byMeal ? subject + ', against its share of the day.' : 'the whole day.'))
@@ -134,22 +152,19 @@
     iconsMinimal.setAttribute('aria-pressed', state.view.icons === 'minimal' ? 'true' : 'false');
 
     var back = focusKey && document.querySelector('[data-focus="' + focusKey + '"]');
-    if (back) back.focus();
+    if (back) back.focus({ preventScroll: true });
   }
 
   var search = document.getElementById('search');
   var sort = document.getElementById('sort');
-  var ref = document.getElementById('show-reference');
   var coloursDay = document.getElementById('colours-day');
   var coloursSel = document.getElementById('colours-selection');
   var iconsEmoji = document.getElementById('icons-emoji');
   var iconsMinimal = document.getElementById('icons-minimal');
   search.value = state.view.query;
   sort.value = state.view.sort;
-  ref.checked = state.view.showReference;
   search.addEventListener('input', function () { state.view.query = search.value; update(); });
   sort.addEventListener('change', function () { state.view.sort = sort.value; update(); });
-  ref.addEventListener('change', function () { state.view.showReference = ref.checked; update(); });
   coloursDay.addEventListener('click', function () { state.view.colours = 'day'; update(); });
   coloursSel.addEventListener('click', function () { state.view.colours = 'selection'; update(); });
   iconsEmoji.addEventListener('click', function () { state.view.icons = 'emoji'; update(); });

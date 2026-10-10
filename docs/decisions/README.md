@@ -20,3 +20,5 @@ Append-only in substance: a reversal is a new record superseding the old one, ne
 - [0014 — The site is styled neon deco](0014-the-site-is-styled-neon-deco.md) — gold frames lit by the band's neon; dark only; two fonts copied into the site
 - [0015 — Food pictures can be minimal icons](0015-food-pictures-can-be-minimal-icons.md) — supersedes 0013's one picture per food; the 3D emoji stays the default
 - [0016 — Tile clicks are animated](0016-tile-clicks-are-animated.md) — neon double rings, a band flash and the amount floating up; a shake when refused; quick clicks stack
+- [0017 — Cards glide to their new height](0017-cards-glide-to-their-new-height.md) — 250 ms; a closing card fades its rows; the sidebar never scrolls on its own
+- [0018 — Every food is shown alike](0018-every-food-is-shown-alike.md) — the table's † rows are no longer dimmed or hidden; protein's one limit is ≥6 g protein

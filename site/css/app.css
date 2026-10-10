@@ -100,6 +100,11 @@ button, input, select { font: inherit; color: inherit; }
    margin hangs that gutter in the page's right padding instead of taking it from the 360px. */
 @media (min-width: 901px) {
   #plate { scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: var(--gold-dim) transparent; margin-right: -12px; padding-right: 2px; }
+  /* The sidebar never scrolls on its own: no anchoring, and room below the add button to scroll
+     it to the top, which site/js/ui/plate.js grows when a card shrinks under the reader.
+     100vh - 32px is #plate's max-height; 56px is the add button's height and the gap above it. */
+  #plate { overflow-anchor: none; }
+  .plate-room { flex: none; min-height: calc(100vh - 32px - 56px); }
 }
 
 @media (max-width: 900px) {
@@ -107,6 +112,7 @@ button, input, select { font: inherit; color: inherit; }
   .top { margin-left: 16px; margin-right: 16px; }
   .legend { padding-left: 16px; padding-right: 16px; }
   #plate { position: static; max-height: none; order: -1; }
+  .plate-room { display: none; }
   .tools input[type=search] { width: 100%; }
   .tools { width: 100%; }
 }
@@ -166,7 +172,6 @@ button, input, select { font: inherit; color: inherit; }
 }
 .tile:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
 .tile.is-on-plate { --frame: 2px; border: 2px solid var(--gold-bright); padding: 16px 14px 12px; }
-.tile.is-reference { opacity: .6; }
 .tile.is-idle { cursor: default; }
 
 /* The band's meter and word, set into a gap in the top of the frame. */
@@ -179,7 +184,9 @@ button, input, select { font: inherit; color: inherit; }
 .tile-meter-off { color: var(--gold-dim); text-shadow: none; }
 .tile-band-word { font-family: var(--font-deco); font-weight: 700; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
 
-.tile-head { display: flex; gap: 10px; align-items: center; }
+/* What a tile's name wraps to is the only height that varies, so the space goes under the head
+   and the lines below line up along a row. */
+.tile-head { display: flex; gap: 10px; align-items: center; margin-bottom: auto; }
 .tile-icon { width: 40px; height: 40px; flex: none; }
 .tile-icon.icon-minimal { width: 34px; height: 34px; margin: 3px; color: var(--fit-c); filter: drop-shadow(0 0 4px var(--fit-c)); }
 .tile-name {
@@ -194,7 +201,6 @@ button, input, select { font: inherit; color: inherit; }
 .tile-prep { color: var(--muted); font-size: 12px; font-style: italic; }
 .tile-kcal { font-size: 12px; display: flex; gap: 4px; align-items: baseline; }
 .tile-kcal b { font-size: 14px; }
-.tile-vs { margin-left: auto; color: var(--muted); font-size: 11px; }
 .tile-macros { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 12px; align-items: baseline; }
 .macro b { font-weight: 700; }
 .macro-protein b { color: var(--protein); }
@@ -207,10 +213,13 @@ button, input, select { font: inherit; color: inherit; }
 .split-fat { background: var(--fat); }
 .split-carbs { background: var(--carbs); }
 
+/* Two lines whatever the tile holds: what a click adds, then what is held (blank until the first
+   add). Neither wraps, so a click never changes the tile's height or the row's. */
 .tile-foot {
-  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 6px; font-size: 12px;
+  display: flex; flex-direction: column; font-size: 12px; line-height: 1.4;
   margin-top: 2px; padding-top: 5px; border-top: 1px solid var(--line);
 }
+.tile-add, .tile-onplate { min-height: 1.4em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tile-add { color: var(--gold-bright); font-weight: 600; letter-spacing: .02em; }
 .tile-onplate { color: var(--gold); }
 .tile-weight { color: var(--muted); font-weight: 400; }
@@ -225,7 +234,8 @@ button, input, select { font: inherit; color: inherit; }
 .tile-why li::before { content: "◆ "; font-size: 9px; vertical-align: 1px; }
 .tile-why .why-tier { font-family: var(--font-deco); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fit-c); }
 .tile-why .why-tier::before { content: none; }
-.tile-change { margin-left: 6px; padding: 0 5px; color: var(--bg); font-family: system-ui, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0; }
+.tile-pic { position: relative; flex: none; display: flex; }
+.tile-change { position: absolute; right: -7px; bottom: -3px; padding: 0 4px; line-height: 15px; color: var(--bg); font-family: system-ui, sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0; }
 .tile-change-up { background: var(--good); box-shadow: 0 0 8px var(--good); }
 .tile-change-down { background: var(--bad); box-shadow: 0 0 8px var(--bad); }
 .why-good::before { color: var(--good); }
@@ -277,19 +287,23 @@ button, input, select { font: inherit; color: inherit; }
   100% { opacity: 0; transform: translateY(-26px); }
 }
 
-/* A click the day selection refused shakes the tile. No fill, so the hover lift comes back. */
+/* A click the day selection refused shakes the tile. No fill, so the hover lift comes back.
+   The day card's hint shakes with it and flashes red. */
 .tile.is-refused { animation: fx-shake .25s ease-in-out; }
+.day-hint.is-refused { animation: fx-shake .25s ease-in-out, fx-hint-flash .6s ease-in; }
 @keyframes fx-shake {
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-3px); }
   40%, 80% { transform: translateX(3px); }
 }
 @keyframes fx-refused-flash { from { border-color: var(--bad); } }
+@keyframes fx-hint-flash { 0%, 35% { color: var(--bad); text-shadow: 0 0 8px var(--bad); } }
 
 @media (prefers-reduced-motion: reduce) {
   .fx-ring { display: none; }
   .fx-float { animation-name: fx-fade; }
   .tile.is-refused { animation-name: fx-refused-flash; animation-timing-function: ease-out; }
+  .day-hint.is-refused { animation: fx-hint-flash .6s ease-in; }
 }
 
 .empty-note { color: var(--muted); }
@@ -305,9 +319,11 @@ button, input, select { font: inherit; color: inherit; }
   color: var(--gold); margin: 14px 0 7px;
 }
 .link { background: none; border: 0; color: var(--gold-bright); cursor: pointer; padding: 0; }
-.link:hover { text-decoration: underline; }
+.link:hover:enabled { text-decoration: underline; }
+.link:disabled { color: var(--muted); cursor: default; opacity: .55; }
 
 .card { cursor: pointer; transition: border-color .15s ease, box-shadow .2s ease; }
+.card.is-gliding { overflow: hidden; flex-shrink: 0; }
 .card:hover { border-color: var(--gold); }
 .card.is-selected {
   cursor: default; border-color: var(--gold-bright);
@@ -328,7 +344,7 @@ button, input, select { font: inherit; color: inherit; }
 .meal-bars .bar-track { height: 4px; }
 .card-meal.is-selected .meal-bars { margin-bottom: 6px; }
 .day-hint { margin-top: 10px; color: var(--muted); font-size: 13px; }
-.day-hint.is-alert { color: var(--gold-bright); font-weight: 600; }
+.card-day:not(.is-selected) .day-hint { opacity: .5; }
 .add-meal {
   background: none; border: 1px dashed var(--gold-dim); border-radius: 0; padding: 11px;
   color: var(--gold); font-family: var(--font-deco); font-weight: 700; letter-spacing: .16em; text-transform: uppercase; cursor: pointer;

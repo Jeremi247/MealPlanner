@@ -13,7 +13,7 @@
     target: { kcal: 1800, protein: 135, fat: 60, carbs: 165, volume: 2250 },  // per day
     meals: [[], [], []],  // each a plate, [{ id, ml }]
     selected: 0,          // a meal's index, or 'day'
-    view: { sort: 'table', query: '', showReference: true, colours: 'day', icons: 'emoji' }  // colours: 'day' or 'selection'; icons: an NM.Icons style
+    view: { sort: 'table', query: '', colours: 'day', icons: 'emoji' }  // colours: 'day' or 'selection'; icons: an NM.Icons style
   };
 
   function clone(x) { return JSON.parse(JSON.stringify(x)); }

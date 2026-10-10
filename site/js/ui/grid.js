@@ -98,7 +98,6 @@
   function tile(food, r, change, inScopeMl, ctx) {
     var t = el('button', 'tile');
     t.type = 'button';
-    if (food.reference) t.classList.add('is-reference');
     if (inScopeMl) t.classList.add('is-on-plate');
     if (!ctx.addTo) t.classList.add('is-idle');
     t.classList.add('fit-' + r.tier);
@@ -107,15 +106,17 @@
     t.dataset.focus = 'tile:' + food.id;
     t.appendChild(bandLegend(r.tier));
 
+    // The change arrow sits on the picture's corner, so it never rewraps the name.
     var head = el('div', 'tile-head');
-    head.appendChild(F.icon(NM.Icons.picture(food.id, ctx.view.icons), 'tile-icon'));
-    var name = el('span', 'tile-name', food.name + (food.reference ? ' †' : ''));
+    var pic = el('span', 'tile-pic');
+    pic.appendChild(F.icon(NM.Icons.picture(food.id, ctx.view.icons), 'tile-icon'));
     if (change) {
       var arrow = el('span', 'tile-change tile-change-' + change.dir, change.dir === 'up' ? '↑' : '↓');
       arrow.title = changeText(change, ctx.subject);
-      name.appendChild(arrow);
+      pic.appendChild(arrow);
     }
-    head.appendChild(name);
+    head.appendChild(pic);
+    head.appendChild(el('span', 'tile-name', food.name));
     var density = NM.Nutrition.mlPer100Kcal(food.perMl.kcal);
     var d = el('span', 'tile-density');
     d.appendChild(el('b', null, F.num(density, 0)));
@@ -129,9 +130,6 @@
     var kcal = el('div', 'tile-kcal');
     kcal.appendChild(el('b', null, F.listed(food.listed.kcal)));
     kcal.appendChild(document.createTextNode(food.portion ? ' kcal' : ' kcal/100 ml'));
-    var vs = el('span', 'tile-vs', F.percent(NM.Nutrition.vsBaseline(food)));
-    vs.title = 'kcal vs the category\'s original average (' + F.num(food.baseline, 1) + ')';
-    kcal.appendChild(vs);
     t.appendChild(kcal);
 
     t.appendChild(macroLine(food));
@@ -142,11 +140,10 @@
     var add = el('span', 'tile-add', '+ ' + amount + ' ');
     add.appendChild(weight(food, food.defaultMl));
     foot.appendChild(add);
-    if (inScopeMl) {
-      var on = el('span', 'tile-onplate', ctx.scopeLabel + ': ' + F.num(inScopeMl) + ' ml ');
-      on.appendChild(weight(food, inScopeMl));
-      foot.appendChild(on);
-    }
+    // The held line is there even when empty, so the first add does not grow the tile.
+    var on = el('span', 'tile-onplate', inScopeMl ? ctx.scopeLabel + ': ' + F.num(inScopeMl) + ' ml ' : '');
+    if (inScopeMl) on.appendChild(weight(food, inScopeMl));
+    foot.appendChild(on);
     t.appendChild(foot);
 
     var why = reasons(food, r, ctx.subject);
@@ -176,7 +173,6 @@
     ctx.categories.forEach(function (cat) {
       var foods = ctx.foods.filter(function (f) {
         if (f.category !== cat.id) return false;
-        if (!ctx.view.showReference && f.reference) return false;
         return !q || (f.name + ' ' + f.prep + ' ' + (f.portion || '')).toLowerCase().indexOf(q) >= 0;
       }).sort(function (a, b) { return sort(a, b, ctx.ranked.results); });
       if (!foods.length) return;

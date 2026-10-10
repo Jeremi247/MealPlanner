@@ -69,10 +69,9 @@
     });
   });
 
-  T.test('Data.ProteinFoodsMeetTheCategoryLimitUnlessReference', function () {
+  T.test('Data.ProteinFoodsMeetTheProteinFloor', function () {
     foods.filter(function (f) { return f.category === 'protein'; }).forEach(function (f) {
-      var within = f.perMl.protein * 100 >= 6 && f.perMl.kcal * 100 <= 107.4;
-      T.eq(within, !f.reference, f.id + ' within ≥6 g protein, ≤107.4 kcal');
+      T.ok(f.perMl.protein * 100 >= 6, f.id + ' has ≥6 g protein per 100 ml');
     });
   });
 

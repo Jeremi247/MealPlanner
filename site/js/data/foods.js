@@ -28,8 +28,8 @@
     { id: 'lentils', name: 'Lentils', prep: 'Boiled, drained', kcal: 97, grams: 84, protein: 7.6, fat: 0.3, carbs: 16.8, est: ['carbs'] },
     { id: 'kidney-beans', name: 'Kidney beans', prep: 'Boiled, drained', kcal: 95, grams: 75, protein: 6.5, fat: 0.4, carbs: 17, est: ['carbs'] },
     { id: 'split-peas', name: 'Split peas', prep: 'Cooked thick, not soup', kcal: 98, grams: 83, protein: 6.9, fat: 0.3, carbs: 17.4, est: ['carbs'] },
-    { id: 'pork-loin', name: 'Pork loin — schab', prep: 'Roasted, visible fat removed, diced', kcal: 118, grams: 66, protein: 16, fat: 5.4, carbs: 0, est: ['carbs'], reference: true },
-    { id: 'lean-beef', name: 'Lean beef', prep: 'Cooked, visible fat removed, diced', kcal: 120, grams: 60, protein: 16.7, fat: 5.4, carbs: 0, est: ['carbs'], reference: true }
+    { id: 'pork-loin', name: 'Pork loin — schab', prep: 'Roasted, visible fat removed, diced', kcal: 118, grams: 66, protein: 16, fat: 5.4, carbs: 0, est: ['carbs'] },
+    { id: 'lean-beef', name: 'Lean beef', prep: 'Cooked, visible fat removed, diced', kcal: 120, grams: 60, protein: 16.7, fat: 5.4, carbs: 0, est: ['carbs'] }
   ];
 
   var volume = [
@@ -95,12 +95,12 @@
   // `defaultMl` is what one click adds; `stepMl` is what a +/- moves.
   NM.categories = [
     { id: 'protein', name: 'Protein foods', basis: 'per100ml', baseline: 67.1, defaultMl: 150, stepMl: 25, foods: protein,
-      note: '≥6 g protein and ≤107.4 kcal per 100 ml. † rows exceed the calorie limit and are reference only.' },
+      note: '≥6 g protein per 100 ml.' },
     { id: 'volume', name: 'Volume foods', basis: 'per100ml', baseline: 12.1, defaultMl: 250, stepMl: 50, foods: volume,
       note: 'Volume is the food as prepared: loose raw leaves and cooked, collapsed leaves are not interchangeable.' },
     { id: 'fat', name: 'Fat portions', basis: 'perPortion', baseline: 109.4, foods: fat,
       note: 'Listed per portion, not per equal volume. Brand and item size move the totals.' },
     { id: 'starch', name: 'Starchy options', basis: 'per100ml', baseline: 67.1, defaultMl: 150, stepMl: 25, foods: starch,
-      note: 'Measured portions. kcal compared against the protein baseline, since this category has none of its own.' }
+      note: 'Measured portions.' }
   ];
 })(window.NM = window.NM || {});

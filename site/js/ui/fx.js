@@ -1,5 +1,6 @@
 // What a tile plays when clicked: for an add, two stepped neon rings echoing out of the frame,
-// a stepped flash of the band inside it and the amount floating up; for a refused click, a shake.
+// a stepped flash of the band inside it and the amount floating up; for a refused click, a shake
+// of the tile and of the day card's hint.
 (function (NM) {
   'use strict';
 
@@ -35,8 +36,11 @@
       t.appendChild(layer('fx-ring fx-ring-band', e.age));
       t.appendChild(layer('fx-float', e.age, label));
     });
-    if (refused.length) aged(t, refused[refused.length - 1].age).classList.add('is-refused');
+    if (refused.length) refuse(t, refused[refused.length - 1].age);
   }
 
-  NM.Fx = { decorate: decorate, LIFETIME_MS: LIFETIME_MS };
+  // Plays the refused click on `node`, `age` ms in: the tile and the day card's hint both use it.
+  function refuse(node, age) { aged(node, age).classList.add('is-refused'); }
+
+  NM.Fx = { decorate: decorate, refuse: refuse, LIFETIME_MS: LIFETIME_MS };
 })(window.NM = window.NM || {});

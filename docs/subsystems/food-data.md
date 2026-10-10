@@ -10,7 +10,6 @@ Scope: `site/js/data/foods.js` and the normalisation in `site/js/core/nutrition.
 | `name`, `prep` | As the reference table writes them |
 | `kcal`, `protein`, `fat`, `carbs` | A number, or `[min, max]` where the table gives a range |
 | `est` | The fields not taken from the table ([0004](../decisions/0004-estimates-are-marked-not-hidden.md)) |
-| `reference` | The table's † rows: listed for comparison, outside the category's limit |
 | `portion`, `portionMl` | Fat portions only: the portion as listed, and the volume it fills |
 | `grams` | The weight of the row's basis, always estimated ([0007](../decisions/0007-weight-is-shown-as-an-estimate.md)). Normalised to `gPerMl`; shown, and converts a typed weight to ml; never summed or scored |
 
@@ -37,7 +36,7 @@ Scope: `site/js/data/foods.js` and the normalisation in `site/js/core/nutrition.
 
 ## Category limits
 
-The protein category admits ≥6 g protein and ≤107.4 kcal per 100 ml; a row outside it is `reference`. `Data.ProteinFoodsMeetTheCategoryLimitUnlessReference` enforces both directions.
+The protein category admits ≥6 g protein per 100 ml. Its kcal is not a limit: pork loin and lean beef run over the table's 107.4 and are shown like any other row ([0018](../decisions/0018-every-food-is-shown-alike.md)). `Data.ProteinFoodsMeetTheProteinFloor` enforces the floor.
 
 `baseline` is each category's "original average" kcal, which the table's comparison column is computed against. Starch has none and uses protein's.
 
