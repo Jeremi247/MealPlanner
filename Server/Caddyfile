@@ -28,6 +28,11 @@ mealplanner.home {
 			file_server
 		}
 
+		# The shelf of premade meals, kept by Server/shelf.py in its own container.
+		handle /api/* {
+			reverse_proxy shelf:8738
+		}
+
 		handle {
 			root * /srv/site
 			file_server

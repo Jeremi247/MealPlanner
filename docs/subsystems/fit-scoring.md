@@ -9,6 +9,7 @@ Scope: `site/js/core/fit.js` — how each tile's colour is computed from the day
 - The **number of meals**. `Fit.mealShare(target, meals)` is one meal's share, the target divided evenly.
 - With **selection colours**, the selected meal's rows stand in for the day and its share for the target, with one meal. Everything below applies unchanged.
 - Each candidate food at its **default portion** — what one click would add.
+- Or a **premade meal** from the shelf, its foods summed and scored as one addition by `Fit.scoreMeal`, on the same scale and against the same day or meal ([shelf](shelf.md)).
 
 ## Dimensions
 
@@ -63,6 +64,7 @@ A pick can move other tiles **up** a band as well as down. "Ahead" is measured a
 - After a tablespoon of peanut butter, oil is `against` and lentils `recommended`.
 - After chicken, adding lentils moves almonds up for fat, and adding potatoes moves potatoes down for carbs.
 - A day of three identical meals balances each food exactly as one of those meals does against a third of the target.
+- A premade meal of one food at its default portion scores exactly as that food's tile.
 
 ## Open questions
 

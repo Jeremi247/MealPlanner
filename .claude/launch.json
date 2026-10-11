@@ -4,8 +4,9 @@
     {
       "name": "site",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8737", "--bind", "127.0.0.1", "--directory", "site"],
-      "port": 8737
+      "runtimeArgs": ["Server/shelf.py", "--site", "site", "--data", "shelf.local.json", "--bind", "127.0.0.1"],
+      "port": 8737,
+      "autoPort": true
     }
   ]
 }

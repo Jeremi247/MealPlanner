@@ -4,7 +4,7 @@ Scope: `site/js/app.js`, `site/js/ui/` and `site/css/app.css` — the grid, the 
 
 ## State
 
-One object, owned by `app.js`: the daily `target`, `meals` (one `[{ id, ml }]` per meal), `selected` (a meal's index, or `'day'`) and `view` (sort, search, `colours`: `'day'` or `'selection'`, and `icons`: `'emoji'` or `'minimal'`). Every change goes through `update()`, which schedules one render for after the current event: save, rank, re-render both views. Nothing else holds state, except three things kept unsaved: the ranking from before the latest change to the meals or target, for the change arrows (dropped when what the tiles are scored against changes, which includes the number of meals), the tile clicks of the last 0.7 s, for their effects, and the meal removed since the last render, so the sidebar's glide matches each card with its own meal. The day's shape is [0011](../decisions/0011-a-day-of-meals-against-a-daily-target.md).
+One object, owned by `app.js`: the daily `target`, `meals` (one `[{ id, ml }]` per meal), `selected` (a meal's index, or `'day'`) and `view` (sort, search, `colours`: `'day'` or `'selection'`, and `icons`: `'emoji'` or `'minimal'`). Every change goes through `update()`, which schedules one render for after the current event: save, rank, re-render both views. Nothing else holds state, except the shelf ([shelf](shelf.md)) and three things kept unsaved: the ranking from before the latest change to the meals or target, for the change arrows (dropped when what the tiles are scored against changes, which includes the number of meals), the tile clicks of the last 0.7 s, for their effects, and the meal removed since the last render, so the sidebar's glide matches each card with its own meal. The day's shape is [0011](../decisions/0011-a-day-of-meals-against-a-daily-target.md).
 
 ## The grid
 
@@ -30,7 +30,7 @@ Every food is shown alike ([0018](../decisions/0018-every-food-is-shown-alike.md
 
 ## The day and its meals
 
-The sidebar is a stack of cards: the day, then one card per meal, then **+ Add meal**. Clicking a card, or its title, selects it. A click on a control inside a card does only what the control does. One card is selected at a time, outlined in the accent colour. A card whose height changes glides to it, and the sidebar never scrolls on its own: there is always room below the last card to keep its position ([0017](../decisions/0017-cards-glide-to-their-new-height.md)). **Asking first** is a small box dropped from the button clicked, with Cancel and the action ([0021](../decisions/0021-a-confirmation-drops-from-its-button.md)).
+The sidebar is a stack of cards: the day, then one card per meal, then **+ Add meal**. Clicking a card, or its title, selects it. A click on a control inside a card does only what the control does. One card is selected at a time, outlined in the accent colour. A card whose height changes glides to it, and the sidebar never scrolls on its own: there is always room below the last card to keep its position ([0017](../decisions/0017-cards-glide-to-their-new-height.md)). **Asking first** is a small box dropped from the button clicked, with Cancel and the action ([0021](../decisions/0021-a-confirmation-drops-from-its-button.md)). The shelf opens from a tab on the sidebar's left edge ([shelf](shelf.md)).
 
 **The day card**
 

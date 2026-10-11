@@ -32,6 +32,9 @@
   --shadow-deep: rgba(0, 0, 0, .6);
   --font-deco: "Poiret One", "Segoe UI", sans-serif;
   --font-neon: "Tilt Neon", "Segoe UI", sans-serif;
+  /* The sidebar's width and the page's side padding, which the shelf's tab lines up with. */
+  --sidebar: 360px;
+  --page-pad: 24px;
   color-scheme: dark;
 }
 
@@ -93,8 +96,8 @@ button, input, select { font: inherit; color: inherit; }
 /* ---- Layout -------------------------------------------------------------- */
 
 .layout {
-  display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 24px;
-  padding: 0 24px 40px; align-items: start;
+  display: grid; grid-template-columns: minmax(0, 1fr) var(--sidebar); gap: 24px;
+  padding: 0 var(--page-pad) 40px; align-items: start;
 }
 #plate { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 32px); overflow: auto; }
 /* The gutter is always reserved, so the scrollbar appearing never squeezes the cards; the negative
@@ -136,7 +139,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px 12px; }
 
-/* The five fit bands (site/js/core/fit.js TIERS), worst to best. Tiles and the legend read them. */
+/* The five fit bands (site/js/core/fit.js TIERS), worst to best. Tiles, shelf cards and the legend read them. */
 :root {
   --fit-against: var(--bad);
   --fit-doubtful: var(--caution);
@@ -144,11 +147,11 @@ button, input, select { font: inherit; color: inherit; }
   --fit-alright: #b4ff4f;
   --fit-recommended: var(--good);
 }
-.tile.fit-against { --fit-c: var(--fit-against); }
-.tile.fit-doubtful { --fit-c: var(--fit-doubtful); }
-.tile.fit-may { --fit-c: var(--fit-may); }
-.tile.fit-alright { --fit-c: var(--fit-alright); }
-.tile.fit-recommended { --fit-c: var(--fit-recommended); }
+.tile.fit-against, .shelf-card.fit-against { --fit-c: var(--fit-against); }
+.tile.fit-doubtful, .shelf-card.fit-doubtful { --fit-c: var(--fit-doubtful); }
+.tile.fit-may, .shelf-card.fit-may { --fit-c: var(--fit-may); }
+.tile.fit-alright, .shelf-card.fit-alright { --fit-c: var(--fit-alright); }
+.tile.fit-recommended, .shelf-card.fit-recommended { --fit-c: var(--fit-recommended); }
 
 /* The band is a neon line inside the gold frame, with a faint glow filling the tile. */
 .tile {
@@ -331,10 +334,11 @@ button, input, select { font: inherit; color: inherit; }
 .link:hover:enabled { text-decoration: underline; }
 .link:disabled { color: var(--muted); cursor: default; opacity: .55; }
 
-/* The box a Clear or a remove asks in, dropped from its button by site/js/ui/confirm.js, which sets
-   its position and --confirm-arrow, the arrow's distance from its left edge. */
+/* The box a Clear or a remove asks in, or a name is typed in, dropped from its button by
+   site/js/ui/confirm.js, which sets its position and --confirm-arrow, the arrow's distance from its
+   left edge. Above the shelf, whose buttons drop it too. */
 .confirm {
-  position: fixed; z-index: 20; width: max-content; max-width: 240px; padding: 12px 14px;
+  position: fixed; z-index: 40; width: max-content; max-width: 240px; padding: 12px 14px;
   background: var(--surface-2); border: 1px solid var(--gold);
   box-shadow: inset 0 0 0 3px var(--surface-2), inset 0 0 0 4px var(--frame-faint), 0 8px 24px var(--shadow-deep), 0 0 14px var(--glow-faint);
   animation: confirm-in .14s ease-out;
@@ -351,6 +355,16 @@ button, input, select { font: inherit; color: inherit; }
 .confirm-btn:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 1px; }
 .confirm-btn-danger { border-color: var(--bad); color: var(--bad); text-shadow: 0 0 6px color-mix(in oklab, var(--bad) 60%, transparent); }
 .confirm-btn-danger:hover { border-color: var(--bad); background: var(--bad); color: var(--bg); text-shadow: none; }
+.confirm-btn-go { border-color: var(--gold); color: var(--gold-bright); }
+.confirm-btn-go:hover { background: var(--gold); color: var(--bg); }
+.confirm-btn:disabled { opacity: .4; cursor: default; border-color: var(--gold-dim); background: none; color: var(--muted); }
+.confirm-form { width: 260px; max-width: calc(100vw - 16px); }
+.confirm-field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; font-size: 11px; color: var(--muted); }
+.confirm-field input { width: 100%; padding: 5px 7px; border: 1px solid var(--gold-dim); border-radius: 0; background: var(--bg); font-size: 13px; }
+.confirm-field input:focus { outline: 1px solid var(--gold); border-color: var(--gold); }
+.confirm-choices { display: flex; flex-wrap: wrap; gap: 4px; margin: -3px 0 10px; }
+.confirm-choice { padding: 1px 7px; border: 1px solid var(--line); border-radius: 0; background: var(--surface); cursor: pointer; font-size: 11px; color: var(--muted); }
+.confirm-choice:hover { border-color: var(--gold); color: var(--gold-bright); }
 @keyframes confirm-in { from { opacity: 0; transform: translateY(-4px); } }
 .confirm.is-above { animation-name: confirm-in-above; }
 @keyframes confirm-in-above { from { opacity: 0; transform: translateY(4px); } }
@@ -442,3 +456,188 @@ button, input, select { font: inherit; color: inherit; }
 .item-nums { grid-area: nums; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .item-raw { font-size: 11px; white-space: nowrap; }
 .item-raw b { font-weight: 400; color: var(--gold); }
+
+/* ---- Shelf --------------------------------------------------------------- */
+/* Premade meals, in a panel drawn over the page from the sidebar's left edge, so opening it moves
+   nothing. The sidebar stays above the dimmed grid, so a meal can be selected with the shelf open.
+   site/js/ui/shelf.js builds the inside; site/js/app.js opens it. */
+
+#plate { z-index: 31; }
+
+.shelf-tab {
+  position: fixed; z-index: 33; top: 50%; right: calc(var(--page-pad) + var(--sidebar) + 1px); transform: translateY(-50%);
+  display: flex; align-items: center; justify-content: center; width: 22px; height: 64px; padding: 0;
+  background: var(--surface); border: 1px solid var(--gold-dim); border-right: 0; border-radius: 0; cursor: pointer;
+  color: var(--gold); font-size: 18px; line-height: 1; text-shadow: 0 0 6px var(--glow-faint);
+  box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 3px var(--frame-faint);
+  transition: color .15s, border-color .15s, box-shadow .2s, background .15s;
+}
+.shelf-tab:hover { color: var(--gold-bright); border-color: var(--gold); text-shadow: 0 0 8px var(--glow); }
+.shelf-tab:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 1px; }
+.shelf-open .shelf-tab {
+  background: var(--surface-2); color: var(--gold-bright); border-color: var(--gold);
+  box-shadow: 0 0 14px var(--glow-faint), inset 0 0 0 2px var(--surface-2), inset 0 0 0 3px var(--gold-dim);
+}
+
+.shelf-dim { position: fixed; inset: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 62%, transparent); opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+.shelf-open .shelf-dim { opacity: 1; pointer-events: auto; }
+
+/* The panel's right edge meets the tab's left edge, so it slides out from behind it. */
+.shelf {
+  --shelf-right: calc(var(--page-pad) + var(--sidebar) + 23px);
+  position: fixed; z-index: 32; top: 16px; bottom: 16px; right: var(--shelf-right); left: max(16px, calc(100% - var(--shelf-right) - 560px));
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface) 140px);
+  border: 1px solid var(--gold); border-right-color: var(--gold-dim);
+  box-shadow: 0 20px 60px var(--shadow-deep), 0 0 24px var(--glow-faint), inset 0 0 0 4px var(--surface), inset 0 0 0 5px var(--gold-dim);
+  clip-path: inset(0 0 0 100%); transform: translateX(28px); visibility: hidden;
+  transition: clip-path .32s cubic-bezier(.2, .8, .2, 1), transform .32s cubic-bezier(.2, .8, .2, 1), visibility 0s .32s;
+}
+.shelf:focus { outline: none; }
+.shelf-open .shelf { clip-path: inset(-40px); transform: none; visibility: visible; transition-delay: 0s; }
+
+.shelf-head { padding: 20px 22px 12px; margin: 0 10px; border-bottom: 3px double var(--gold-dim); }
+.shelf-head-row { display: flex; align-items: center; gap: 10px; }
+.shelf-title {
+  flex: 1; font-family: var(--font-deco); font-weight: 700; font-size: 22px; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--gold-bright); text-shadow: 0 0 10px var(--glow);
+}
+.shelf-close { width: 28px; height: 28px; background: none; border: 1px solid var(--gold-dim); border-radius: 0; color: var(--gold); cursor: pointer; }
+.shelf-close:hover { border-color: var(--gold); color: var(--gold-bright); }
+.shelf-sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.shelf-tools { display: flex; gap: 8px; margin-top: 12px; }
+.shelf-tools input { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--gold-dim); border-radius: 0; padding: 6px 10px; }
+.shelf-tools input:focus { outline: 1px solid var(--gold); outline-offset: 1px; }
+.shelf-save { padding: 6px 10px; background: var(--gold); color: var(--bg); border: 1px solid var(--gold); border-radius: 0; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.shelf-save:hover { background: var(--gold-bright); }
+.shelf-save:disabled { background: none; color: var(--muted); border-color: var(--gold-dim); cursor: default; }
+
+.shelf-body { flex: 1; overflow: auto; padding: 4px 22px 22px; margin: 0 6px 6px; scrollbar-width: thin; scrollbar-color: var(--gold-dim) transparent; }
+.shelf-note { margin-top: 12px; padding: 7px 10px; border: 1px solid var(--caution); color: var(--caution); font-size: 12px; }
+.shelf-empty { margin-top: 18px; color: var(--muted); font-style: italic; }
+
+.shelf-row-head { display: flex; align-items: center; gap: 8px; margin: 16px 0 8px; }
+.shelf-row-head::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--gold-dim), transparent); }
+.shelf-row-name {
+  padding: 0; background: none; border: 0; cursor: pointer; color: var(--gold);
+  font-family: var(--font-deco); font-weight: 700; font-size: 12px; letter-spacing: .2em; text-transform: uppercase;
+}
+.shelf-row-name:hover:not(:disabled) { color: var(--gold-bright); text-shadow: 0 0 8px var(--glow); }
+.shelf-row-name:disabled { cursor: default; }
+.shelf-row-count { color: var(--muted); font-size: 11px; }
+/* Each row of cards stands on a gold plank, two to a row. */
+.shelf-plank { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding-bottom: 12px; }
+.shelf-plank::after {
+  content: ""; position: absolute; left: -10px; right: -10px; bottom: 0; height: 4px;
+  border-top: 1px solid var(--gold); border-bottom: 1px solid var(--gold-dim); box-shadow: 0 6px 12px -4px var(--glow-faint);
+}
+
+/* A card: the menu's double frame in the band's colour, the name over two lines' room so the band
+   sits at one height across a plank, and everything from the double rule down at its foot. */
+.shelf-card {
+  --fit-c: var(--gold-dim);
+  display: flex; flex-direction: column; padding: 14px 14px 12px; text-align: center;
+  background: var(--tile); border: 1px solid var(--gold-dim);
+  box-shadow: inset 0 0 0 3px var(--tile), inset 0 0 0 4px var(--fit-c), inset 0 0 0 6px var(--tile),
+    inset 0 0 0 7px color-mix(in srgb, var(--fit-c) 45%, transparent), inset 0 0 22px color-mix(in srgb, var(--fit-c) 16%, transparent);
+}
+.shelf-card-name {
+  min-height: 2.5em; margin: 0; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-deco); font-weight: 700; font-size: 15px; letter-spacing: .14em; line-height: 1.25; text-transform: uppercase; overflow-wrap: anywhere;
+}
+.shelf-card-band { display: flex; flex-direction: column; align-items: center; gap: 3px; margin-top: 7px; color: var(--fit-c); text-shadow: 0 0 6px var(--fit-c); }
+.shelf-card-meter { display: flex; align-items: center; gap: 8px; width: 100%; font-size: 10px; letter-spacing: 1px; justify-content: center; }
+.shelf-card-meter::before, .shelf-card-meter::after { content: ""; flex: 1; height: 1px; margin: 0 6px; background: linear-gradient(90deg, transparent, var(--gold-dim)); }
+.shelf-card-meter::after { background: linear-gradient(270deg, transparent, var(--gold-dim)); }
+.shelf-card-word { font-family: var(--font-deco); font-weight: 700; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; }
+
+.shelf-foods { list-style: none; margin: 10px 0; padding: 0; display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.shelf-food { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12px; }
+.shelf-food-icon { width: 20px; height: 20px; flex: none; }
+.shelf-food-icon.icon-minimal { width: 18px; height: 18px; margin: 1px; color: var(--gold-bright); }
+.shelf-food-name { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shelf-food-dots { flex: 1; min-width: 10px; border-bottom: 1px dotted var(--gold-dim); transform: translateY(-3px); }
+.shelf-food-amount { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.shelf-card-foot { margin-top: auto; padding-top: 8px; border-top: 3px double var(--gold-dim); text-align: left; }
+.shelf-card-line { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.shelf-card-line b { font-family: var(--font-neon); font-weight: 400; font-size: 14px; }
+.shelf-card-line span { color: var(--muted); }
+.shelf-card-density b { color: var(--fit-c); text-shadow: 0 0 6px var(--fit-c); }
+.shelf-card-macros { display: flex; gap: 10px; margin-top: 4px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.shelf-card-macros .macro-protein { color: var(--protein); }
+.shelf-card-macros .macro-fat { color: var(--fat); }
+.shelf-card-macros .macro-carbs { color: var(--carbs); }
+/* A glowing tube per macro, as on a tile, full at one meal's share of the target. */
+.shelf-tubes { display: flex; flex-direction: column; gap: 3px; margin-top: 5px; }
+.shelf-tube { --gram-c: var(--protein); position: relative; height: 3px; background: var(--surface-2); }
+.shelf-tube-fat { --gram-c: var(--fat); }
+.shelf-tube-carbs { --gram-c: var(--carbs); }
+.shelf-tube span { position: absolute; left: 0; top: 0; bottom: 0; background: var(--gram-c); box-shadow: 0 0 6px var(--gram-c); }
+
+.shelf-card-into {
+  width: 100%; margin-top: 10px; padding: 5px; border: 1px solid var(--gold); border-radius: 0; cursor: pointer;
+  background: color-mix(in srgb, var(--gold) 16%, var(--surface)); color: var(--gold-bright);
+  font-family: var(--font-deco); font-weight: 700; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+}
+.shelf-card-into:hover:not(:disabled) { background: var(--gold); color: var(--bg); }
+.shelf-card-into:disabled { border-color: var(--gold-dim); background: none; color: var(--muted); cursor: default; }
+.shelf-card-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 10px; margin-top: 6px; white-space: nowrap; }
+.shelf-card-link { padding: 0 2px; background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 11px; }
+.shelf-card-link:hover:not(:disabled) { color: var(--gold-bright); }
+.shelf-card-link:disabled { opacity: .4; cursor: default; }
+.shelf-card-into:focus-visible, .shelf-card-link:focus-visible, .shelf-row-name:focus-visible, .shelf-close:focus-visible, .shelf-save:focus-visible, .shelf-grip:focus-visible {
+  outline: 2px solid var(--gold-bright); outline-offset: 1px;
+}
+
+/* Moving a card or a row (site/js/ui/shelf.js). The grip takes touch, so a finger on it drags
+   rather than scrolls; a mouse can drag from anywhere off a button. */
+.shelf-card { position: relative; }
+.shelf-card.is-movable, .shelf-row-head.is-movable { cursor: grab; }
+.shelf-grip {
+  width: 24px; height: 24px; padding: 0; background: none; border: 0; border-radius: 0; flex: none;
+  color: var(--gold-dim); font-size: 15px; line-height: 1; cursor: grab; touch-action: none;
+}
+.shelf-grip:hover:not(:disabled) { color: var(--gold-bright); text-shadow: 0 0 8px var(--glow); }
+.shelf-grip:disabled { opacity: .4; cursor: default; }
+.shelf-card .shelf-grip { position: absolute; top: 8px; left: 8px; }
+.shelf-card .shelf-card-name { padding: 0 18px; }
+.shelf-row-head .shelf-grip { margin-left: -6px; }
+
+/* Where the lifted item would drop: a dashed gap its size. */
+.shelf-card.is-lifted { background: none; border: 1px dashed var(--gold); box-shadow: inset 0 0 18px var(--glow-faint); }
+.shelf-card.is-lifted > *, .shelf-row.is-lifted .shelf-row-head > * { visibility: hidden; }
+.shelf-row.is-lifted .shelf-row-head { outline: 1px dashed var(--gold); outline-offset: 2px; }
+/* The copy under the pointer. */
+.shelf-ghost {
+  position: fixed; z-index: 45; margin: 0; pointer-events: none; opacity: .92; rotate: 1.5deg;
+  box-shadow: 0 18px 40px var(--shadow-deep), 0 0 22px var(--glow-faint);
+}
+.shelf-ghost .shelf-row-head { margin: 0; padding: 4px 8px; background: var(--surface-2); border: 1px solid var(--gold); }
+/* Over every cursor a card, a button or a grip sets. */
+.shelf-dragging, .shelf-dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+/* While a row moves, only the rows' heads are shown. */
+.shelf-body.is-sorting-rows .shelf-plank, .shelf-body.is-sorting-rows .shelf-new-row { display: none; }
+.shelf-body.is-sorting-rows .shelf-row-head { margin: 6px 0; }
+
+.shelf-new-row {
+  margin-top: 16px; padding: 14px; border: 1px dashed var(--gold-dim); text-align: center;
+  color: var(--muted); font-size: 12px; font-style: italic;
+  transition: border-color .15s, color .15s, box-shadow .15s;
+}
+.shelf-body.is-sorting-cards .shelf-new-row { border-color: var(--gold); color: var(--gold); }
+.shelf-new-row.is-over { border-style: solid; color: var(--gold-bright); box-shadow: inset 0 0 18px var(--glow-faint), 0 0 12px var(--glow-faint); }
+
+/* Stacked, the sidebar spans the page: the tab sits on the window's right edge, the panel beside it. */
+@media (max-width: 900px) {
+  .shelf-tab { right: 0; }
+  .shelf { --shelf-right: 22px; left: 8px; }
+  .shelf-body { padding-left: 14px; padding-right: 14px; }
+}
+/* Too narrow for two cards to show a food's name: one to a plank. */
+@media (max-width: 520px) {
+  .shelf-plank { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shelf, .shelf-dim { transition: none; }
+}

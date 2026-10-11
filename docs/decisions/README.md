@@ -5,10 +5,10 @@ Scope: one line per decision — what was decided, and which record to trust whe
 Append-only in substance: a reversal is a new record superseding the old one, never an edit.
 
 - [0001 — A plate is measured in millilitres](0001-a-plate-is-measured-in-millilitres.md) — superseded in part by 0007: a weight is now shown
-- [0002 — No build step and no dependencies](0002-no-build-step-and-no-dependencies.md)
+- [0002 — No build step and no dependencies](0002-no-build-step-and-no-dependencies.md) — superseded in part by 0023: `Serve.bat` runs `Server/shelf.py`
 - [0003 — Fit is scored against what the plate lacks](0003-fit-is-scored-against-what-the-plate-lacks.md) — superseded in part by 0009: the scale is no longer the grid's
 - [0004 — Estimates are marked, not hidden](0004-estimates-are-marked-not-hidden.md)
-- [0005 — State lives in the browser](0005-state-lives-in-the-browser.md) — a recorded shortcut, with its trigger
+- [0005 — State lives in the browser](0005-state-lives-in-the-browser.md) — a recorded shortcut, with its trigger; superseded in part by 0023: the shelf
 - [0006 — The test gate is a headless browser](0006-the-test-gate-is-a-headless-browser.md)
 - [0007 — Weight is shown as an estimate](0007-weight-is-shown-as-an-estimate.md) — supersedes 0001's "no weight is shown"; superseded in part by 0008
 - [0008 — A weight can be typed in, and is stored as ml](0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md) — supersedes 0007's "never typed in"
@@ -25,4 +25,6 @@ Append-only in substance: a reversal is a new record superseding the old one, ne
 - [0019 — Tile macros are drawn in grams](0019-tile-macros-are-drawn-in-grams.md) — a bar per macro, linear to a tick at 10 g, white-hot overflow up to 20 g
 - [0020 — A portion is counted in its own unit](0020-a-portion-is-counted-in-its-own-unit.md) — "3x egg", "1.5x tbsp"; a +/- moves one unit, or half a spoon, and lands on a whole step
 - [0021 — A confirmation drops from its button](0021-a-confirmation-drops-from-its-button.md) — a framed box under the button, Cancel and the action in red; replaces `window.confirm`
-- [0022 — The site is also served on the home network](0022-the-site-is-also-served-on-the-home-network.md) — `Deploy.bat` after a green gate; Caddy in Docker on onee-chan at `https://mealplanner.home/`, its own CA, IPv4 and private addresses only
+- [0022 — The site is also served on the home network](0022-the-site-is-also-served-on-the-home-network.md) — `Deploy.bat` after a green gate; Caddy in Docker on onee-chan at `https://mealplanner.home/`, its own CA, IPv4 and private addresses only; superseded in part by 0023: the server keeps the shelf
+- [0023 — The shelf is kept on the server](0023-the-shelf-is-kept-on-the-server.md) — `Server/shelf.py`, standard library, one JSON file; changes sent as operations; read-only from the browser's last copy when unreachable; superseded in part by 0024: `move` is now `place` and `placeRow`
+- [0024 — The shelf is ordered by hand](0024-the-shelf-is-ordered-by-hand.md) — the stored list's order is the shelf's; cards and rows are dragged, or moved with the arrow keys; the Move link is gone

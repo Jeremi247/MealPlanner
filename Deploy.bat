@@ -13,7 +13,7 @@ if errorlevel 1 (
 )
 
 echo Deploying to %SERVER% ...
-"%SystemRoot%\System32\tar.exe" -cf - -C Server compose.yaml Caddyfile install.sh -C .. site | ssh %SERVER% "rm -rf ~/mealplanner/incoming && mkdir -p ~/mealplanner/incoming && tar -xf - -C ~/mealplanner/incoming && sh ~/mealplanner/incoming/install.sh"
+"%SystemRoot%\System32\tar.exe" -cf - -C Server compose.yaml Caddyfile install.sh shelf.py -C .. site | ssh %SERVER% "rm -rf ~/mealplanner/incoming && mkdir -p ~/mealplanner/incoming && tar -xf - -C ~/mealplanner/incoming && sh ~/mealplanner/incoming/install.sh"
 if errorlevel 1 (
 	echo Deploy FAILED.
 	goto :end

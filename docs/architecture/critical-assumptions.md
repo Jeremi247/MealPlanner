@@ -18,9 +18,9 @@ Jeremi's table decides every value it lists, ranges included ([food data](../sub
 
 ## Local, private, and zero-install
 
-The app runs from a folder with Python and a browser ([0002](../decisions/0002-no-build-step-and-no-dependencies.md)). It makes no network request, and what the user enters stays in that browser ([0005](../decisions/0005-state-lives-in-the-browser.md)).
+The app runs from a folder with Python and a browser ([0002](../decisions/0002-no-build-step-and-no-dependencies.md)). It requests nothing but its own files and its own origin's `/api/shelf`. The shelf of premade meals is the one thing kept on the server that serves the site, by a script on Python's standard library ([0023](../decisions/0023-the-shelf-is-kept-on-the-server.md)). Everything else the user enters stays in that browser ([0005](../decisions/0005-state-lives-in-the-browser.md)).
 
-**A change has ignored it when it adds a package manager, a CDN, a bundler or a server-side store.** Each is a recorded decision first, with the trigger that justifies it.
+**A change has ignored it when it adds a package manager, a CDN, a bundler, a request to another origin, or a server-side store beyond the shelf.** Each is a recorded decision first, with the trigger that justifies it.
 
 ## See also
 - [Overview](overview.md) — the files these constrain

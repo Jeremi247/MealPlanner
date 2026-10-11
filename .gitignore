@@ -1,0 +1,4 @@
+# The shelf Serve.bat keeps while working on the site. The real one lives on the server.
+shelf.local.json
+shelf.local.json.tmp
+__pycache__/

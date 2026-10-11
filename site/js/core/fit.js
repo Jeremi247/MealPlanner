@@ -99,13 +99,25 @@
     var regime = totals.volume > 0 ? 'balance' : 'empty';
     var results = {};
     foods.forEach(function (f) {
-      var r = scoreOne(totals, NM.Nutrition.amount(f, f.defaultMl), target, regime, meals);
-      r.norm = r.raw >= 0 ? Math.min(1, r.raw / FULL_GOOD) : Math.max(-1, r.raw / FULL_BAD);
-      r.tier = tier(r.norm);
-      r.regime = regime;
-      results[f.id] = r;
+      results[f.id] = judge(totals, NM.Nutrition.amount(f, f.defaultMl), target, regime, meals);
     });
     return { results: results, totals: totals, regime: regime, need: needs(totals, target) };
+  }
+
+  // scoreOne, placed on the fixed scale and in its band.
+  function judge(totals, added, target, regime, meals) {
+    var r = scoreOne(totals, added, target, regime, meals);
+    r.norm = r.raw >= 0 ? Math.min(1, r.raw / FULL_GOOD) : Math.max(-1, r.raw / FULL_BAD);
+    r.tier = tier(r.norm);
+    r.regime = regime;
+    return r;
+  }
+
+  // Scores a whole premade meal, `added` (an amount), as one addition to `items`, on the same
+  // scale and with the same arguments as `rank`.
+  function scoreMeal(items, added, target, meals) {
+    var totals = NM.Nutrition.totals(items);
+    return judge(totals, added, target, totals.volume > 0 ? 'balance' : 'empty', meals);
   }
 
   // Balance dimensions ordered from most to least missing.
@@ -152,6 +164,6 @@
 
   NM.Fit = {
     BALANCE: BALANCE, OVERSHOOT_WEIGHT: OVERSHOOT_WEIGHT, TIERS: TIERS, tier: tier, needs: needs, mealShare: mealShare,
-    scoreOne: scoreOne, rank: rank, mostMissing: mostMissing, compare: compare
+    scoreOne: scoreOne, rank: rank, scoreMeal: scoreMeal, mostMissing: mostMissing, compare: compare
   };
 })(window.NM = window.NM || {});

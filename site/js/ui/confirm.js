@@ -1,5 +1,5 @@
-// The small framed box that asks before a Clear or a remove, dropped from the button that asked
-// (docs/decisions/0021-a-confirmation-drops-from-its-button.md).
+// The small framed box that asks before a Clear or a remove, or asks for a name, dropped from the
+// button that asked (docs/decisions/0021-a-confirmation-drops-from-its-button.md).
 (function (NM) {
   'use strict';
 
@@ -40,28 +40,14 @@
     box.classList.toggle('is-above', above);
   }
 
-  // Asks `message` beside `anchor`, the button that was clicked, with Cancel and `action`.
-  // `onYes` runs only on the action. Escape, a click elsewhere, focus leaving the box or a
-  // scroll cancels; Tab stays inside. Asking again from the same button closes the box.
-  function ask(anchor, message, action, onYes) {
+  // Opens `box` beside `anchor`, the button that was clicked, and focuses `first`. Escape, a click
+  // elsewhere, focus leaving the box or a scroll cancels; Tab cycles inside. Opening again from the
+  // same button closes the box instead.
+  function show(anchor, box, first) {
     var again = open && open.anchor === anchor;
     close(false);
     if (again) return;
 
-    var box = el('div', 'confirm');
-    box.setAttribute('role', 'alertdialog');
-    box.setAttribute('aria-modal', 'true');
-    box.setAttribute('aria-label', message);
-    box.appendChild(el('p', 'confirm-msg', message));
-    var actions = el('div', 'confirm-actions');
-    var no = el('button', 'confirm-btn', 'Cancel'); no.type = 'button';
-    var yes = el('button', 'confirm-btn confirm-btn-danger', action); yes.type = 'button';
-    actions.appendChild(no);
-    actions.appendChild(yes);
-    box.appendChild(actions);
-
-    no.addEventListener('click', function () { close(true); });
-    yes.addEventListener('click', function () { close(true); onYes(); });
     // Focus going back to the button is left to its click, as below.
     box.addEventListener('focusout', function (e) {
       var to = e.relatedTarget;
@@ -72,11 +58,15 @@
       box: box, anchor: anchor,
       // The button itself is left to its own click, which closes the box through `again`.
       onPointer: function (e) { if (!box.contains(e.target) && !anchor.contains(e.target)) close(false); },
-      // Tab either way goes to the other of the two buttons, so the keyboard never leaves the box
+      // Tab moves through the box's own controls and wraps, so the keyboard never leaves the box
       // for wherever comes after it at the end of the page.
       onKey: function (e) {
-        if (e.key === 'Escape') { e.preventDefault(); close(true); }
-        else if (e.key === 'Tab') { e.preventDefault(); (document.activeElement === no ? yes : no).focus(); }
+        if (e.key === 'Escape') { e.preventDefault(); close(true); return; }
+        if (e.key !== 'Tab') return;
+        e.preventDefault();
+        var all = [].slice.call(box.querySelectorAll('input, button:not([disabled])'));
+        var i = all.indexOf(document.activeElement);
+        all[(i + (e.shiftKey ? -1 : 1) + all.length) % all.length].focus();
       },
       onMove: function (e) { if (!e.target || !e.target.nodeType || !box.contains(e.target)) close(false); }
     };
@@ -87,8 +77,82 @@
 
     document.body.appendChild(box);
     place(box, anchor);
-    no.focus({ preventScroll: true });
+    first.focus({ preventScroll: true });
+    if (first.select) first.select();
   }
 
-  NM.Confirm = { ask: ask, close: close };
+  function frame(message, cls) {
+    var box = el('div', 'confirm' + (cls ? ' ' + cls : ''));
+    box.setAttribute('role', 'alertdialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', message);
+    box.appendChild(el('p', 'confirm-msg', message));
+    return box;
+  }
+
+  function buttons(box, action, cls) {
+    var actions = el('div', 'confirm-actions');
+    var no = el('button', 'confirm-btn', 'Cancel'); no.type = 'button';
+    var yes = el('button', 'confirm-btn ' + cls, action); yes.type = 'button';
+    actions.appendChild(no);
+    actions.appendChild(yes);
+    box.appendChild(actions);
+    no.addEventListener('click', function () { close(true); });
+    return { no: no, yes: yes };
+  }
+
+  // Asks `message` beside `anchor`, the button that was clicked, with Cancel and `action`.
+  // `onYes` runs only on the action.
+  function ask(anchor, message, action, onYes) {
+    var box = frame(message);
+    var b = buttons(box, action, 'confirm-btn-danger');
+    b.yes.addEventListener('click', function () { close(true); onYes(); });
+    show(anchor, box, b.no);
+  }
+
+  // Asks for text beside `anchor`: `fields` is [{ key, label, value, max, choices }], where
+  // `choices` are answers a click fills in. The action stays off while a field is blank, and
+  // Enter in a field takes it. `onYes` gets { key: text }, trimmed, its spaces collapsed.
+  function prompt(anchor, message, fields, action, onYes) {
+    var box = frame(message, 'confirm-form');
+    var inputs = fields.map(function (f) {
+      var label = el('label', 'confirm-field');
+      label.appendChild(el('span', null, f.label));
+      var input = el('input');
+      input.type = 'text';
+      input.value = f.value || '';
+      input.maxLength = f.max;
+      input.autocomplete = 'off';
+      label.appendChild(input);
+      box.appendChild(label);
+      if (f.choices && f.choices.length) {
+        var row = el('div', 'confirm-choices');
+        f.choices.forEach(function (c) {
+          var b = el('button', 'confirm-choice', c); b.type = 'button';
+          b.addEventListener('click', function () { input.value = c; input.focus(); check(); });
+          row.appendChild(b);
+        });
+        box.appendChild(row);
+      }
+      return input;
+    });
+    var b = buttons(box, action, 'confirm-btn-go');
+    function values() {
+      var v = {};
+      fields.forEach(function (f, i) { v[f.key] = inputs[i].value.split(/\s+/).filter(Boolean).join(' '); });
+      return v;
+    }
+    function ok() { var v = values(); return fields.every(function (f) { return v[f.key]; }); }
+    function check() { b.yes.disabled = !ok(); }
+    function take() { if (!ok()) return; var v = values(); close(true); onYes(v); }
+    inputs.forEach(function (input) {
+      input.addEventListener('input', check);
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); take(); } });
+    });
+    b.yes.addEventListener('click', take);
+    check();
+    show(anchor, box, inputs[0]);
+  }
+
+  NM.Confirm = { ask: ask, prompt: prompt, close: close };
 })(window.NM = window.NM || {});

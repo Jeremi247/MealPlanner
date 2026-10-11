@@ -18,6 +18,17 @@ services:
       - caddy_data:/data
       - caddy_config:/config
 
+  # The shelf of premade meals: Server/shelf.py, reached only through Caddy at /api/. No port is published.
+  shelf:
+    image: python:3.12.15-alpine
+    restart: unless-stopped
+    command: python /srv/shelf.py --data /data/shelf.json --bind 0.0.0.0 --port 8738
+    volumes:
+      - .:/srv:ro
+      # Holds the shelf; losing it loses every premade meal.
+      - shelf_data:/data
+
 volumes:
   caddy_data:
   caddy_config:
+  shelf_data:

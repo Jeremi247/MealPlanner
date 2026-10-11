@@ -12,13 +12,15 @@ if ! out=$(docker compose -f incoming/compose.yaml run --rm --no-deps -T --quiet
 	exit 1
 fi
 
-mv incoming/compose.yaml incoming/Caddyfile .
+mv incoming/compose.yaml incoming/Caddyfile incoming/shelf.py .
 rm -rf site.old
 if [ -d site ]; then mv site site.old; fi
 mv incoming/site site
 rm -rf incoming site.old
 
 docker compose up -d --quiet-pull
+# The shelf reads shelf.py once, at start, so a new one needs a restart; the shelf itself is in its volume.
+docker compose restart shelf
 
 # A container started a moment ago may not be listening for a reload yet.
 for try in 1 2 3 4 5; do
