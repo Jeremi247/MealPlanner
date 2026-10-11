@@ -25,3 +25,4 @@ Append-only in substance: a reversal is a new record superseding the old one, ne
 - [0019 — Tile macros are drawn in grams](0019-tile-macros-are-drawn-in-grams.md) — a bar per macro, linear to a tick at 10 g, white-hot overflow up to 20 g
 - [0020 — A portion is counted in its own unit](0020-a-portion-is-counted-in-its-own-unit.md) — "3x egg", "1.5x tbsp"; a +/- moves one unit, or half a spoon, and lands on a whole step
 - [0021 — A confirmation drops from its button](0021-a-confirmation-drops-from-its-button.md) — a framed box under the button, Cancel and the action in red; replaces `window.confirm`
+- [0022 — The site is also served on the home network](0022-the-site-is-also-served-on-the-home-network.md) — `Deploy.bat` after a green gate; Caddy in Docker on onee-chan at `https://mealplanner.home/`, its own CA, IPv4 and private addresses only

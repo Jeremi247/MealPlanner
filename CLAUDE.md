@@ -13,6 +13,7 @@ Read the doc that owns what you are changing. It holds the rule; this file does 
 | Touch foods, a value or a portion | [food data](docs/subsystems/food-data.md) |
 | Touch how tiles are coloured | [fit scoring](docs/subsystems/fit-scoring.md) |
 | Touch the grid or the plate | [UI](docs/subsystems/ui.md) |
+| Touch `Deploy.bat` or `Server/` | [deploy](docs/deploy.md) |
 | Write a comment, doc or record | [docs & comments](docs/conventions/docs-and-comments.md) |
 | Decide something structural | [the register](docs/decisions/README.md) — grep it before writing a *because* |
 | Call a change done | [testing](docs/testing.md) — the gate, and what a green run does not prove |
@@ -35,6 +36,12 @@ The gate, before calling a change done:
 
 ```bash
 powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Gate.ps1
+```
+
+Deploy to https://mealplanner.home/ (runs the gate first):
+
+```bash
+Deploy.bat
 ```
 
 ## Where things are

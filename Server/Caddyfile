@@ -1,0 +1,36 @@
+# The LAN copy of the site, at https://mealplanner.home/, served by Caddy on onee-chan.
+# Deploy.bat ships this file; docs/deploy.md is the one-time setup each device needs.
+{
+	# The certificate comes from Caddy's own CA; devices trust its root by hand.
+	skip_install_trust
+	# Port 80 is not published, so nothing would answer a redirect.
+	auto_https disable_redirects
+}
+
+mealplanner.home {
+	tls internal
+
+	encode gzip
+	# Revalidate every file, so a deploy shows on the next reload.
+	header Cache-Control no-cache
+
+	# Holds because compose.yaml publishes 443 on IPv4 only. See 0022.
+	@outside not remote_ip private_ranges
+	# route keeps the written order: left to Caddy's own, abort sorts after handle and never runs.
+	route {
+		abort @outside
+
+		# The CA's root certificate, for a device to download and trust.
+		handle /ca.crt {
+			root * /data/caddy/pki/authorities/local
+			rewrite * /root.crt
+			header Content-Type application/x-x509-ca-cert
+			file_server
+		}
+
+		handle {
+			root * /srv/site
+			file_server
+		}
+	}
+}

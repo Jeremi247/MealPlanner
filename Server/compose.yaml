@@ -1,0 +1,23 @@
+# Caddy serving the LAN copy of the site. Lives in ~/mealplanner on onee-chan, beside site/ and the Caddyfile.
+# Deploy.bat ships this file; Server/install.sh starts it. See docs/deploy.md.
+name: mealplanner
+
+services:
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    command: caddy run --config /srv/Caddyfile --adapter caddyfile
+    ports:
+      # IPv4 only: over IPv6 Docker hands Caddy each client as a private address, past the Caddyfile's rule.
+      - "0.0.0.0:443:443/tcp"
+      - "0.0.0.0:443:443/udp"
+    volumes:
+      # The whole folder, not site/ alone: a deploy swaps site/ for a new directory.
+      - .:/srv:ro
+      # Holds the CA; losing it means every device trusts a new root.
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

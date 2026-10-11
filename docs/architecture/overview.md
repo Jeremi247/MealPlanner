@@ -4,13 +4,13 @@ Scope: the app in one page — what each file is, and how a click becomes a colo
 
 ## Shape
 
-A static site in `site/`, served by Python's `http.server` from `Serve.bat`, with no build step and no dependencies ([0002](../decisions/0002-no-build-step-and-no-dependencies.md)). Scripts are classic `<script>` tags sharing one global namespace, `NM`, loaded in dependency order by `site/index.html`.
+A static site in `site/`, served by Python's `http.server` from `Serve.bat`, with no build step and no dependencies ([0002](../decisions/0002-no-build-step-and-no-dependencies.md)). `Deploy.bat` copies it to Caddy on the home server, configured in `Server/` ([deploy](../deploy.md)). Scripts are classic `<script>` tags sharing one global namespace, `NM`, loaded in dependency order by `site/index.html`.
 
 | File | Is | Owned by |
 |---|---|---|
 | `site/js/data/foods.js` | The food table, as Jeremi's reference table lists it | [food data](../subsystems/food-data.md) |
 | `site/js/data/icons.js`, `site/js/data/icons-minimal.js`, `site/img/foods/` | The emoji picture for each food, 3D or minimal | [0013](../decisions/0013-foods-are-shown-as-fluent-3d-emoji.md), [0015](../decisions/0015-food-pictures-can-be-minimal-icons.md) |
-| `site/css/app.css`, `site/fonts/` | The neon deco look, and its two fonts | [0014](../decisions/0014-the-site-is-styled-neon-deco.md) |
+| `site/css/app.css`, `site/fonts/`, `site/img/favicon.svg` | The neon deco look, its two fonts, and the tab icon (lean beef's minimal picture, lit green) | [0014](../decisions/0014-the-site-is-styled-neon-deco.md) |
 | `site/js/core/nutrition.js` | Normalises the table to per-ml records; sums a plate | [food data](../subsystems/food-data.md) |
 | `site/js/core/fit.js` | Scores one more portion of each food against the day | [fit scoring](../subsystems/fit-scoring.md) |
 | `site/js/store.js` | Per-browser persistence of target, meals, selection and view | [0005](../decisions/0005-state-lives-in-the-browser.md) |
