@@ -15,7 +15,7 @@ Runs the [gate](testing.md). When it is green, ships `site/` and `Server/` to `~
 | `Deploy.bat` | The gate, then the release packed with Windows' `tar` and unpacked over `ssh` |
 | `Server/compose.yaml` | The Caddy container: port 443 on IPv4 only, the folder mounted read-only, the CA in a named volume. The shelf's container: no port, the shelf in its own volume |
 | `Server/Caddyfile` | The site, its certificate from Caddy's own CA, `/ca.crt`, `/api/` forwarded to the shelf, and the private-network-only rule |
-| `Server/shelf.py` | The shelf of premade meals ([0023](decisions/0023-the-shelf-is-kept-on-the-server.md)) |
+| `Server/shelf.py` | The shelf of premade meals and the foods of your own ([0023](decisions/0023-the-shelf-is-kept-on-the-server.md), [0026](decisions/0026-your-own-foods-are-kept-on-the-server.md)) |
 | `Server/install.sh` | Runs on the server: swaps the new `site/` in whole, then `docker compose up`, a reload and a restart of the shelf |
 
 ## Once: the network
@@ -48,7 +48,7 @@ then trust it as a root:
 ssh jeremi@192.168.1.31 "docker compose -f ~/mealplanner/compose.yaml logs caddy"
 ```
 
-`logs shelf` in place of `logs caddy` shows the shelf's. `down` stops the site and keeps the CA and the shelf. **`down -v` deletes both**: every device then has to trust a new root, and every premade meal is gone ([P2](todo/P2/back-up-the-shelf.md)).
+`logs shelf` in place of `logs caddy` shows the shelf's. `down` stops the site and keeps the CA and the shelf. **`down -v` deletes both**: every device then has to trust a new root, and every premade meal and food of your own is gone ([P2](todo/P2/back-up-the-shelf.md)).
 
 ## See also
 - [0022](decisions/0022-the-site-is-also-served-on-the-home-network.md) — why Caddy, Docker and `mealplanner.home`

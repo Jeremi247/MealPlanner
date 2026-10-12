@@ -31,13 +31,16 @@
     T.eq(NM.Shelf.clean({ meals: [meal('a', 'R', name + 'x')] }, byId).length, 0, 'one character over is dropped');
   });
 
-  T.test('Shelf.AFoodNoLongerInTheTableIsDroppedAndAMealLeftEmptyGoes', function () {
+  T.test('Shelf.AFoodNotKnownIsCountedAndAMealOfNoneStaysToBeRemoved', function () {
     var out = NM.Shelf.clean({ meals: [
       meal('a', 'R', 'Mixed', [{ id: 'skyr', ml: 200 }, { id: 'dragonfruit', ml: 100 }]),
-      meal('b', 'R', 'Gone', [{ id: 'dragonfruit', ml: 100 }])
+      meal('b', 'R', 'Gone', [{ id: 'my-0123456789ab', ml: 100 }])
     ] }, byId);
-    T.eq(out.length, 1, 'the meal with nothing left goes');
-    T.eq(JSON.stringify(out[0].items), JSON.stringify([{ id: 'skyr', ml: 200 }]), 'the unknown food is dropped');
+    T.eq(JSON.stringify(out[0].items), JSON.stringify([{ id: 'skyr', ml: 200 }]), 'the unknown food is left out');
+    T.eq(out[0].missing, 1, 'and counted');
+    T.eq(out.length, 2, 'a meal of foods not known stays, so it can be removed');
+    T.eq(out[1].items.length + '/' + out[1].missing, '0/1', 'with nothing to show but the count');
+    T.ok(NM.Shelf.matches(out[1], 'gone', byId), 'and is found by its name');
   });
 
   function ids(meals) { return meals.map(function (m) { return m.id; }).join(','); }

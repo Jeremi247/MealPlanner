@@ -124,9 +124,10 @@
     return n;
   }
 
+  // `ctx.preview` builds the tile as a picture of a food not yet in the grid: not a button.
   function tile(food, r, change, inScopeMl, ctx) {
-    var t = el('button', 'tile');
-    t.type = 'button';
+    var t = el(ctx.preview ? 'div' : 'button', 'tile');
+    if (!ctx.preview) t.type = 'button';
     if (inScopeMl) t.classList.add('is-on-plate');
     if (!ctx.addTo) t.classList.add('is-idle');
     t.classList.add('fit-' + r.tier);
@@ -138,7 +139,7 @@
     // The change arrow sits on the picture's corner, so it never rewraps the name.
     var head = el('div', 'tile-head');
     var pic = el('span', 'tile-pic');
-    pic.appendChild(F.icon(NM.Icons.picture(food.id, ctx.view.icons), 'tile-icon'));
+    pic.appendChild(F.icon(NM.Icons.picture(food, ctx.view.icons), 'tile-icon'));
     if (change) {
       var arrow = el('span', 'tile-change tile-change-' + change.dir, change.dir === 'up' ? '↑' : '↓');
       arrow.title = changeText(change, ctx.subject);
@@ -156,7 +157,15 @@
     head.appendChild(d);
     t.appendChild(head);
 
-    t.appendChild(el('div', 'tile-prep', food.portion ? food.portion + ' · ≈' + F.num(food.portionMl) + ' ml' + (food.est.indexOf('portionMl') >= 0 ? '~' : '') : food.prep));
+    var prep = el('div', 'tile-prep');
+    // A food of your own says so where the table's would show its preparation.
+    if (food.custom) {
+      var yours = el('span', 'tile-mine', 'Yours');
+      yours.title = 'A food of your own, not from the reference table. + Add food edits it.';
+      prep.appendChild(yours);
+    }
+    prep.appendChild(document.createTextNode(food.portion ? food.portion + ' · ≈' + F.num(food.portionMl) + ' ml' + (food.est.indexOf('portionMl') >= 0 ? '~' : '') : food.prep));
+    t.appendChild(prep);
 
     var kcal = el('div', 'tile-kcal');
     kcal.appendChild(el('b', null, F.listed(food.listed.kcal)));
@@ -184,11 +193,21 @@
     why.forEach(function (w) { ul.appendChild(el('li', w.good ? 'why-good' : 'why-bad', w.text)); });
     t.appendChild(ul);
 
-    var action = ctx.addTo ? 'Add ' + food.name + ' to ' + ctx.addTo : food.name + ', select a meal to add it';
+    var action = ctx.preview ? 'Preview of ' + food.name : ctx.addTo ? 'Add ' + food.name + ' to ' + ctx.addTo : food.name + ', select a meal to add it';
     t.setAttribute('aria-label', action + '. ' + F.TIER_LABEL[r.tier] + '. ' + (change ? changeText(change, ctx.subject) + '. ' : '') + why.map(function (w) { return w.text; }).join('; '));
+    if (ctx.preview) {
+      t.setAttribute('role', 'img');
+      return t;
+    }
     t.addEventListener('click', function () { ctx.onAdd(food); });
     NM.Fx.decorate(t, ctx.effects[food.id], '+' + amount);
     return t;
+  }
+
+  // The tile `food` (a record from Nutrition.normalise) would have in the grid, scored as `r`
+  // against `subject`, for the box a food of your own is entered in.
+  function preview(food, r, subject, icons) {
+    return tile(food, r, null, 0, { preview: true, subject: subject, addTo: null, view: { icons: icons } });
   }
 
   // `ctx`: { categories, foods, ranked, changes (id → Fit.compare entry), inScope (id → ml in the
@@ -224,5 +243,5 @@
     if (!shown) root.appendChild(el('p', 'empty-note', 'No food matches “' + ctx.view.query + '”.'));
   }
 
-  NM.Grid = { render: render, reasons: reasons };
+  NM.Grid = { render: render, reasons: reasons, preview: preview };
 })(window.NM = window.NM || {});

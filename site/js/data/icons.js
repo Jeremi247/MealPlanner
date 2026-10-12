@@ -28,14 +28,32 @@
     'pistachios': 'chestnut', 'cashews': 'chestnut'
   };
 
-  // The 3D image's path for a food id, relative to site/index.html.
-  function src(id) { return 'img/foods/' + BY_FOOD[id] + '.png'; }
+  // Every picture there is, by name: what a food of your own can be shown as. Each has both styles.
+  var NAMES = Object.keys(NM.MinimalIcons).sort();
 
-  // A food's picture in a style, for Format.icon: { src } for 'emoji' (the default), or
-  // { paths } from NM.MinimalIcons for 'minimal'.
-  function picture(id, style) {
-    return style === 'minimal' ? { paths: NM.MinimalIcons[BY_FOOD[id]] } : { src: src(id) };
+  // A food of your own whose picture is unknown, or not chosen, is shown as this.
+  var FALLBACK = 'steaming-bowl';
+
+  // The picture's name for a food: its own choice for one of yours, or BY_FOOD for a table row.
+  function nameOf(food) {
+    var n = food.icon || BY_FOOD[food.id];
+    return n && NM.MinimalIcons[n] ? n : FALLBACK;
   }
 
-  NM.Icons = { BY_FOOD: BY_FOOD, src: src, picture: picture };
+  // The 3D image's path for a picture's name, relative to site/index.html.
+  function srcOf(name) { return 'img/foods/' + name + '.png'; }
+
+  // The 3D image's path for a table row's id.
+  function src(id) { return srcOf(BY_FOOD[id]); }
+
+  // A picture by name in a style, for Format.icon: { src } for 'emoji' (the default), or
+  // { paths } from NM.MinimalIcons for 'minimal'.
+  function named(name, style) {
+    return style === 'minimal' ? { paths: NM.MinimalIcons[name] } : { src: srcOf(name) };
+  }
+
+  // A food's picture in a style. `food` is a record from Nutrition.normalise, or { id } for a table row.
+  function picture(food, style) { return named(nameOf(food), style); }
+
+  NM.Icons = { BY_FOOD: BY_FOOD, NAMES: NAMES, FALLBACK: FALLBACK, nameOf: nameOf, src: src, srcOf: srcOf, named: named, picture: picture };
 })(window.NM = window.NM || {});

@@ -1,5 +1,5 @@
 // The shelf of premade meals, as data: what a stored shelf may hold, its rows, and a premade
-// meal put into a meal of the day. Where it is kept is site/js/shelf-store.js, and why on the
+// meal put into a meal of the day. Where it is kept is site/js/server-store.js, and why on the
 // server is docs/decisions/0023-the-shelf-is-kept-on-the-server.md.
 (function (NM) {
   'use strict';
@@ -14,9 +14,10 @@
     return Array.from(v).length <= max ? v : '';
   }
 
-  // The well-formed meals of a stored shelf, [{ id, name, row, items [{ id, ml }] }], in the
-  // shelf's order. A food no longer in the table is dropped, and so is a meal left with none.
-  // `byId` maps a food id to its record.
+  // The well-formed meals of a stored shelf, [{ id, name, row, items [{ id, ml }], missing }], in
+  // the shelf's order. A food not known, gone from the table or a food of your own removed or not
+  // yet loaded, is left out of `items` and counted in `missing`; a meal left with no food at all
+  // is kept while it holds one, so it can still be removed. `byId` maps a food id to its record.
   function clean(doc, byId) {
     var meals = doc && Array.isArray(doc.meals) ? doc.meals : [];
     var out = [];
@@ -24,14 +25,16 @@
       if (!m || typeof m.id !== 'string' || !Array.isArray(m.items)) return;
       var name = text(m.name, NAME_MAX), row = text(m.row, ROW_MAX);
       if (!name || !row) return;
-      var seen = {};
+      var seen = {}, missing = 0;
       var items = m.items.filter(function (it) {
-        var ok = it && typeof it.id === 'string' && byId[it.id] && !seen[it.id] &&
+        var ok = it && typeof it.id === 'string' && !seen[it.id] &&
           typeof it.ml === 'number' && isFinite(it.ml) && it.ml > 0;
-        if (ok) seen[it.id] = true;
-        return ok;
+        if (!ok) return false;
+        seen[it.id] = true;
+        if (!byId[it.id]) missing++;
+        return !!byId[it.id];
       }).map(function (it) { return { id: it.id, ml: it.ml }; });
-      if (items.length) out.push({ id: m.id, name: name, row: row, items: items });
+      if (items.length || missing) out.push({ id: m.id, name: name, row: row, items: items, missing: missing });
     });
     return out;
   }

@@ -147,9 +147,22 @@
       T.ok(x.responseText.length > 0, f.id + ': site/' + src + ' is missing or empty');
     });
   });
+  // A food of your own can be shown as any of these, in either style.
+  T.test('Data.EveryPictureOnOfferHasBothStyles', function () {
+    T.ok(NM.Icons.NAMES.indexOf(NM.Icons.FALLBACK) >= 0, 'the fallback is on offer');
+    NM.Icons.NAMES.forEach(function (name) {
+      var x = new XMLHttpRequest();
+      x.overrideMimeType('text/plain; charset=x-user-defined');
+      try {
+        x.open('GET', '../site/' + NM.Icons.srcOf(name), false);
+        x.send();
+      } catch (e) { T.ok(false, name + ': cannot read site/' + NM.Icons.srcOf(name)); }
+      T.ok(x.responseText.length > 0, name + ': site/' + NM.Icons.srcOf(name) + ' is missing or empty');
+    });
+  });
   T.test('Data.EveryIconHasAMinimalVersion', function () {
     foods.forEach(function (f) {
-      var paths = NM.Icons.picture(f.id, 'minimal').paths;
+      var paths = NM.Icons.picture(f, 'minimal').paths;
       T.ok(Array.isArray(paths) && paths.length > 0, f.id + ': no minimal paths for ' + NM.Icons.BY_FOOD[f.id]);
       (paths || []).forEach(function (p) {
         var d = typeof p === 'string' ? p : p[0];

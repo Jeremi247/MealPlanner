@@ -151,6 +151,59 @@ class Changes(unittest.TestCase):
         self.assertEqual(shelf.clean(None), {'meals': []})
 
 
+FOOD = {'name': 'Quark', 'prep': 'Plain, 0%', 'category': 'protein', 'kcal': 68, 'protein': 12, 'fat': 0.2, 'carbs': 4,
+        'grams': 105, 'icon': 'bowl-with-spoon'}
+PORTION = dict(FOOD, name='Rice cake', category='starch', portionMl=40, unit={'per': 1, 'name': 'cake', 'step': 1})
+
+
+def foods():
+    return {'meals': [], 'foods': []}
+
+
+class Foods(unittest.TestCase):
+    def test_add_keeps_the_food_and_gives_it_an_id(self):
+        d = shelf.apply_food(foods(), {'op': 'add', 'food': FOOD})
+        f = d['foods'][0]
+        self.assertRegex(f['id'], shelf.MY_FOOD_ID)
+        self.assertEqual({k: v for k, v in f.items() if k != 'id'}, FOOD)
+        self.assertRegex(f['id'], shelf.FOOD_ID, 'a shelved meal can hold it')
+
+    def test_a_portion_is_kept_with_its_volume_and_unit(self):
+        f = shelf.apply_food(foods(), {'op': 'add', 'food': PORTION})['foods'][0]
+        self.assertEqual((f['portionMl'], f['unit']), (40, PORTION['unit']))
+
+    def test_edit_keeps_the_id_and_remove_takes_the_food(self):
+        d = shelf.apply_food(foods(), {'op': 'add', 'food': FOOD})
+        fid = d['foods'][0]['id']
+        shelf.apply_food(d, {'op': 'edit', 'id': fid, 'food': dict(FOOD, name='Skyr', kcal=60)})
+        self.assertEqual((d['foods'][0]['id'], d['foods'][0]['name'], d['foods'][0]['kcal']), (fid, 'Skyr', 60))
+        shelf.apply_food(d, {'op': 'remove', 'id': fid})
+        self.assertEqual(d['foods'], [])
+        with self.assertRaises(shelf.Refused) as e:
+            shelf.apply_food(d, {'op': 'remove', 'id': fid})
+        self.assertEqual(e.exception.status, 404)
+
+    def test_a_malformed_food_is_refused(self):
+        bad = [dict(FOOD, name=''), dict(FOOD, name='x' * 61), dict(FOOD, category='dessert'), dict(FOOD, kcal=-1),
+               dict(FOOD, protein='12'), dict(FOOD, fat=True), dict(FOOD, carbs=float('nan')), dict(FOOD, grams=0),
+               dict(FOOD, prep='x' * 81), dict(PORTION, portionMl=0), dict(PORTION, unit={'per': 0, 'name': 'cake', 'step': 1}),
+               dict(PORTION, unit={'per': 1, 'name': '', 'step': 1}), dict(PORTION, unit={'per': 1, 'name': 'cake', 'step': 2}),
+               dict(PORTION, unit='cake'), 'junk']
+        for f in bad:
+            with self.subTest(f=f), self.assertRaises(shelf.Refused):
+                shelf.apply_food(foods(), {'op': 'add', 'food': f})
+
+    def test_an_unknown_picture_is_dropped_not_refused(self):
+        f = shelf.apply_food(foods(), {'op': 'add', 'food': dict(FOOD, icon='<b>')})['foods'][0]
+        self.assertIsNone(f['icon'])
+
+    def test_clean_foods_drops_malformed_and_repeated_foods(self):
+        good = shelf.apply_food(foods(), {'op': 'add', 'food': FOOD})['foods'][0]
+        doc = {'foods': [good, dict(good), dict(good, id='my-bad'), dict(good, id='my-111111111111', kcal=-5), 'junk']}
+        self.assertEqual(shelf.clean_foods(doc), {'foods': [good]})
+        self.assertEqual(shelf.clean_foods(None), {'foods': []})
+
+
 class Http(unittest.TestCase):
     def setUp(self):
         self.dir = tempfile.mkdtemp()
@@ -198,6 +251,22 @@ class Http(unittest.TestCase):
         self.assertIn('could not be written', body['error'])
         with urllib.request.urlopen(self.url) as r:
             self.assertEqual(json.loads(r.read()), {'meals': []})
+
+    def test_foods_are_kept_in_the_shelfs_file_without_touching_the_shelf(self):
+        self.post(json.dumps(MEAL).encode())
+        foods_url = self.url.replace('/api/shelf', '/api/foods')
+        req = urllib.request.Request(foods_url, data=json.dumps({'op': 'add', 'food': FOOD}).encode(),
+                                     headers={'Content-Type': 'application/json'}, method='POST')
+        with urllib.request.urlopen(req) as r:
+            doc = json.loads(r.read())
+        self.assertEqual([f['name'] for f in doc['foods']], ['Quark'])
+        self.assertNotIn('meals', doc)
+        with urllib.request.urlopen(foods_url) as r:
+            self.assertEqual(json.loads(r.read()), doc)
+        with urllib.request.urlopen(self.url) as r:
+            self.assertEqual([m['name'] for m in json.loads(r.read())['meals']], [MEAL['name']])
+        again = shelf.Store(self.path)
+        self.assertEqual((again.read('/api/foods'), len(again.read()['meals'])), (doc, 1))
 
     def test_only_a_json_body_is_taken(self):
         self.assertEqual(self.post(json.dumps(MEAL).encode(), 'text/plain')[0], 415)

@@ -14,6 +14,7 @@ Read the doc that owns what you are changing. It holds the rule; this file does 
 | Touch how tiles are coloured | [fit scoring](docs/subsystems/fit-scoring.md) |
 | Touch the grid or the plate | [UI](docs/subsystems/ui.md) |
 | Touch the shelf of premade meals | [shelf](docs/subsystems/shelf.md) |
+| Touch foods of your own | [your foods](docs/subsystems/your-foods.md) |
 | Touch `Deploy.bat` or `Server/` | [deploy](docs/deploy.md), and for `Server/shelf.py` [shelf](docs/subsystems/shelf.md) |
 | Write a comment, doc or record | [docs & comments](docs/conventions/docs-and-comments.md) |
 | Decide something structural | [the register](docs/decisions/README.md) — grep it before writing a *because* |

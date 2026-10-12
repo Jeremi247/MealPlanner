@@ -25,12 +25,19 @@
     var list = el('ul', 'shelf-foods');
     entry.items.forEach(function (it) {
       var li = el('li', 'shelf-food');
-      li.appendChild(F.icon(NM.Icons.picture(it.food.id, icons), 'shelf-food-icon'));
+      li.appendChild(F.icon(NM.Icons.picture(it.food, icons), 'shelf-food-icon'));
       li.appendChild(el('span', 'shelf-food-name', it.food.name));
       li.appendChild(el('span', 'shelf-food-dots'));
       li.appendChild(el('span', 'shelf-food-amount', F.amount(it.food, it.ml)));
       list.appendChild(li);
     });
+    // A food not known: a food of your own removed, or not loaded yet. The meal still holds it.
+    var missing = entry.meal.missing;
+    if (missing) {
+      var gone = el('li', 'shelf-food shelf-food-missing', missing + (missing === 1 ? ' food' : ' foods') + ' not found');
+      gone.title = 'A food of your own that was removed, or has not loaded yet. The meal still holds it, and shows and scores without it.';
+      list.appendChild(gone);
+    }
     return list;
   }
 
@@ -296,15 +303,17 @@
     var into = el('button', 'shelf-card-into', ctx.into ? 'Into ' + ctx.into : 'Select a meal');
     into.type = 'button';
     into.dataset.focus = 'shelf-into:' + m.id;
-    into.disabled = !ctx.into;
-    into.title = ctx.into ? 'Add these foods to ' + ctx.into : 'Select a meal to put this into';
+    // A meal whose every food is not found has nothing to put in.
+    var empty = !entry.items.length;
+    into.disabled = !ctx.into || empty;
+    into.title = empty ? 'None of its foods is found' : ctx.into ? 'Add these foods to ' + ctx.into : 'Select a meal to put this into';
     into.addEventListener('click', function () { ctx.onInto(m); });
     foot.appendChild(into);
 
     var links = el('div', 'shelf-card-links');
     var off = !ctx.online;
     [
-      link('New meal', 'shelf-new:' + m.id, false, function () { ctx.onNewMeal(m); }),
+      link('New meal', 'shelf-new:' + m.id, empty, function () { ctx.onNewMeal(m); }),
       link('Rename', 'shelf-rename:' + m.id, off, function (b) { ctx.onRename(m, b); }),
       link('Copy', 'shelf-copy:' + m.id, off, function () { ctx.onCopy(m); }),
       link('Remove', 'shelf-remove:' + m.id, off, function (b) { ctx.onRemove(m, b); })

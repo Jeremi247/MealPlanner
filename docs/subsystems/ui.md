@@ -4,7 +4,7 @@ Scope: `site/js/app.js`, `site/js/ui/` and `site/css/app.css` — the grid, the 
 
 ## State
 
-One object, owned by `app.js`: the daily `target`, `meals` (one `[{ id, ml }]` per meal), `selected` (a meal's index, or `'day'`) and `view` (sort, search, `colours`: `'day'` or `'selection'`, and `icons`: `'emoji'` or `'minimal'`). Every change goes through `update()`, which schedules one render for after the current event: save, rank, re-render both views. Nothing else holds state, except the shelf ([shelf](shelf.md)) and three things kept unsaved: the ranking from before the latest change to the meals or target, for the change arrows (dropped when what the tiles are scored against changes, which includes the number of meals), the tile clicks of the last 0.7 s, for their effects, and the meal removed since the last render, so the sidebar's glide matches each card with its own meal. The day's shape is [0011](../decisions/0011-a-day-of-meals-against-a-daily-target.md).
+One object, owned by `app.js`: the daily `target`, `meals` (one `[{ id, ml }]` per meal), `selected` (a meal's index, or `'day'`) and `view` (sort, search, `colours`: `'day'` or `'selection'`, and `icons`: `'emoji'` or `'minimal'`). Every change goes through `update()`, which schedules one render for after the current event: save, rank, re-render both views. Nothing else holds state, except the shelf ([shelf](shelf.md)), the foods of your own as the server last gave them, and three things kept unsaved: the ranking from before the latest change to the meals or target, for the change arrows (dropped when what the tiles are scored against changes, which includes the number of meals and the list of foods), the tile clicks of the last 0.7 s, for their effects, and the meal removed since the last render, so the sidebar's glide matches each card with its own meal. The day's shape is [0011](../decisions/0011-a-day-of-meals-against-a-daily-target.md).
 
 ## The grid
 
@@ -12,7 +12,7 @@ One section per category, in the table's order. A tile shows, from top to bottom
 
 - set into a gap in the top of its frame, its band as a meter of one to five lit diamonds (one per step up from the worst band) and a short word from `Format.TIER_SHORT`
 - the food's picture ([0013](../decisions/0013-foods-are-shown-as-fluent-3d-emoji.md)), its name (broken at a hyphen only where neither part is under three letters), and **ml per 100 kcal** — the volume 100 kcal of the food buys, in the band's colour, its unit on two short lines to leave the name room
-- preparation, or for a fat portion the portion and its volume
+- preparation, or for a portion food the portion and its volume; for a food of your own, *Yours* before it
 - kcal as listed
 - protein, fat and carbs as listed; `~` marks a non-zero estimate
 - a bar per macro of its grams on the listed basis: a glowing tube up to a tick at 10 g, then white-hot past it, with up to 10 g more squeezed into the last quarter ([0019](../decisions/0019-tile-macros-are-drawn-in-grams.md))
@@ -27,6 +27,10 @@ One section per category, in the table's order. A tile shows, from top to bottom
 **The Icons toggle** shows the 3D emoji (**3D**, the default) or the same emoji as one-colour icons (**Minimal**), in the grid and the meal rows ([0015](../decisions/0015-food-pictures-can-be-minimal-icons.md)). A minimal icon is an inline SVG in `currentColor`: on a tile it takes the band colour, in a row it is gold.
 
 Every food is shown alike ([0018](../decisions/0018-every-food-is-shown-alike.md)). Sort orders apply within each category.
+
+## Adding a food of your own
+
+**+ Add food** in the header opens the box a food of your own is added or edited in ([your foods](your-foods.md)).
 
 ## The day and its meals
 
@@ -60,4 +64,5 @@ A weight is always marked `~` and carries a tooltip ([0007](../decisions/0007-we
 
 ## See also
 - [Fit scoring](fit-scoring.md) — what `norm` means
+- [Your foods](your-foods.md) — the box a food of your own is added in
 - [JS style](../conventions/js-style.md) — the namespace and script order

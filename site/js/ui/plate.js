@@ -92,7 +92,7 @@
     var a = NM.Nutrition.amount(food, ml);
     var name = el('div', 'item-name');
     var title = el('span', 'item-title');
-    title.appendChild(F.icon(NM.Icons.picture(food.id, icons), 'item-icon'));
+    title.appendChild(F.icon(NM.Icons.picture(food, icons), 'item-icon'));
     title.appendChild(document.createTextNode(food.name));
     name.appendChild(title);
     name.appendChild(el('small', null, food.unit ? F.amount(food, ml) : food.prep));

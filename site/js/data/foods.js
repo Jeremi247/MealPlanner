@@ -27,9 +27,6 @@
     { id: 'crab', name: 'Crab meat', prep: 'Cooked, loosely flaked', kcal: 51, grams: 61, protein: 10, fat: 0.9, carbs: 0, est: ['carbs'] },
     { id: 'lobster', name: 'Lobster meat', prep: 'Boiled or steamed, pieces', kcal: 60, grams: 67, protein: 12.5, fat: 0.4, carbs: 0.8, est: ['carbs'] },
     { id: 'edamame', name: 'Edamame', prep: 'Cooked, shelled beans', kcal: 80, grams: 66, protein: 7.8, fat: 3.4, carbs: 5.9, est: ['carbs'] },
-    { id: 'lentils', name: 'Lentils', prep: 'Boiled, drained', kcal: 97, grams: 84, protein: 7.6, fat: 0.3, carbs: 16.8, est: ['carbs'] },
-    { id: 'kidney-beans', name: 'Kidney beans', prep: 'Boiled, drained', kcal: 95, grams: 75, protein: 6.5, fat: 0.4, carbs: 17, est: ['carbs'] },
-    { id: 'split-peas', name: 'Split peas', prep: 'Cooked thick, not soup', kcal: 98, grams: 83, protein: 6.9, fat: 0.3, carbs: 17.4, est: ['carbs'] },
     { id: 'pork-loin', name: 'Pork loin — schab', prep: 'Roasted, visible fat removed, diced', kcal: 118, grams: 66, protein: 16, fat: 5.4, carbs: 0, est: ['carbs'] },
     { id: 'lean-beef', name: 'Lean beef', prep: 'Cooked, visible fat removed, diced', kcal: 120, grams: 60, protein: 16.7, fat: 5.4, carbs: 0, est: ['carbs'] }
   ];
@@ -89,7 +86,10 @@
 
   var starch = [
     { id: 'potatoes', name: 'Boiled potatoes', prep: 'Peeled, pieces, not mashed', kcal: 57, grams: 66, protein: 1.1, fat: 0.1, carbs: 13.2, raw: { word: 'unpeeled', perG: 1.15 } },
-    { id: 'white-rice', name: 'White rice', prep: 'Cooked long-grain, loosely filled', kcal: 87, grams: 67, protein: 1.8, fat: 0.2, carbs: 18.8, raw: { word: 'dry', perG: 0.35 } }
+    { id: 'white-rice', name: 'White rice', prep: 'Cooked long-grain, loosely filled', kcal: 87, grams: 67, protein: 1.8, fat: 0.2, carbs: 18.8, raw: { word: 'dry', perG: 0.35 } },
+    { id: 'lentils', name: 'Lentils', prep: 'Boiled, drained', kcal: 97, grams: 84, protein: 7.6, fat: 0.3, carbs: 16.8, est: ['carbs'] },
+    { id: 'kidney-beans', name: 'Kidney beans', prep: 'Boiled, drained', kcal: 95, grams: 75, protein: 6.5, fat: 0.4, carbs: 17, est: ['carbs'] },
+    { id: 'split-peas', name: 'Split peas', prep: 'Cooked thick, not soup', kcal: 98, grams: 83, protein: 6.9, fat: 0.3, carbs: 17.4, est: ['carbs'] }
   ];
 
   // The table gives no weights, so every row's `grams` is an estimate, and so is `raw`.
@@ -98,13 +98,15 @@
   });
 
   // `baseline` is the "original average" the reference table compares kcal against.
-  // `defaultMl` is what one click adds; `stepMl` is what a +/- moves.
+  // `defaultMl` is what one click adds; `stepMl` is what a +/- moves. Fat's are for a food of
+  // your own listed per 100 ml, as every table row in it is per portion.
+  // Which category a food belongs in is site/js/core/category.js.
   NM.categories = [
     { id: 'protein', name: 'Protein foods', basis: 'per100ml', baseline: 67.1, defaultMl: 150, stepMl: 25, foods: protein,
       note: '≥6 g protein per 100 ml.' },
     { id: 'volume', name: 'Volume foods', basis: 'per100ml', baseline: 12.1, defaultMl: 250, stepMl: 50, foods: volume,
       note: 'Volume is the food as prepared: loose raw leaves and cooked, collapsed leaves are not interchangeable.' },
-    { id: 'fat', name: 'Fat portions', basis: 'perPortion', baseline: 109.4, foods: fat,
+    { id: 'fat', name: 'Fat portions', basis: 'perPortion', baseline: 109.4, defaultMl: 15, stepMl: 5, foods: fat,
       note: 'Listed per portion, not per equal volume. Brand and item size move the totals.' },
     { id: 'starch', name: 'Starchy options', basis: 'per100ml', baseline: 67.1, defaultMl: 150, stepMl: 25, foods: starch,
       note: 'Measured portions.' }

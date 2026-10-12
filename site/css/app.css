@@ -70,6 +70,9 @@ button, input, select { font: inherit; color: inherit; }
 }
 .tools input[type=search]:focus, .tools select:focus { outline: 1px solid var(--gold); outline-offset: 1px; }
 .tools input[type=search] { width: 220px; }
+.food-add { padding: 6px 12px; background: var(--gold); color: var(--bg); border: 1px solid var(--gold); border-radius: 0; font-weight: 600; white-space: nowrap; cursor: pointer; }
+.food-add:hover { background: var(--gold-bright); }
+.food-add:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 1px; }
 .select, .check { display: flex; gap: 6px; align-items: center; color: var(--muted); }
 .check input { accent-color: var(--gold); }
 .toggle { display: flex; align-items: center; color: var(--muted); }
@@ -205,6 +208,10 @@ button, input, select { font: inherit; color: inherit; }
   color: var(--fit-c); text-shadow: 0 0 6px var(--fit-c), 0 0 14px color-mix(in srgb, var(--fit-c) 60%, transparent);
 }
 .tile-prep { color: var(--muted); font-size: 12px; font-style: italic; }
+.tile-mine {
+  margin-right: 6px; padding: 0 5px; border: 1px solid var(--gold-dim); color: var(--gold); font-style: normal;
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+}
 .tile-kcal { font-size: 12px; display: flex; gap: 4px; align-items: baseline; }
 .tile-kcal b { font-size: 14px; }
 .tile-macros { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 12px; align-items: baseline; }
@@ -370,6 +377,85 @@ button, input, select { font: inherit; color: inherit; }
 @keyframes confirm-in-above { from { opacity: 0; transform: translateY(4px); } }
 @media (prefers-reduced-motion: reduce) {
   .confirm, .confirm.is-above { animation-name: fx-fade; animation-direction: reverse; }
+}
+
+/* The box a food of your own is added or edited in, site/js/ui/food-form.js. Under the confirmation,
+   which its Remove drops. */
+.food-dim { position: fixed; inset: 0; z-index: 34; background: color-mix(in srgb, var(--bg) 70%, transparent); }
+.food-form {
+  position: fixed; z-index: 35; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 830px; max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); overflow: auto; padding: 18px 22px 20px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface) 140px);
+  border: 1px solid var(--gold);
+  box-shadow: 0 20px 60px var(--shadow-deep), 0 0 24px var(--glow-faint), inset 0 0 0 4px var(--surface), inset 0 0 0 5px var(--gold-dim);
+  scrollbar-width: thin; scrollbar-color: var(--gold-dim) transparent;
+  animation: confirm-in .14s ease-out;
+}
+.food-head { display: flex; align-items: center; gap: 10px; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 3px double var(--gold-dim); }
+.food-title {
+  flex: 1; font-family: var(--font-deco); font-weight: 700; font-size: 19px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gold-bright); text-shadow: 0 0 10px var(--glow);
+}
+.food-close { width: 28px; height: 28px; background: none; border: 1px solid var(--gold-dim); border-radius: 0; color: var(--gold); cursor: pointer; }
+.food-close:hover { border-color: var(--gold); color: var(--gold-bright); }
+.food-mine { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 12px; }
+.food-mine[hidden] { display: none; }
+.food-mine-label { margin-right: 4px; color: var(--muted); font-size: 11px; }
+.food-chip { padding: 1px 8px; border: 1px solid var(--line); border-radius: 0; background: var(--surface); cursor: pointer; font-size: 12px; }
+.food-chip:hover { border-color: var(--gold); color: var(--gold-bright); }
+.food-chip[aria-pressed="true"] { border-color: var(--gold); color: var(--gold-bright); box-shadow: 0 0 8px var(--glow-faint); }
+.food-chip-new { color: var(--gold); }
+/* The fields, and beside them the tile the food will have. Stacked, the preview comes after the fields. */
+.food-body { display: grid; grid-template-columns: minmax(0, 1fr) 236px; gap: 0 22px; align-items: start; }
+.food-fields { min-width: 0; }
+.food-preview { position: sticky; top: 0; display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; }
+.food-preview-label { color: var(--muted); font-size: 11px; }
+.food-preview-slot .tile { cursor: default; }
+.food-preview-slot .tile:hover { transform: none; }
+/* No hover to open the reasons on a picture: they are part of it. */
+.food-preview-slot .tile-why {
+  display: block; position: static; margin: 4px 0 0; padding: 6px 0 0;
+  background: none; border: 0; border-top: 1px solid var(--line); box-shadow: none;
+}
+.food-preview.is-draft .food-preview-slot { opacity: .6; }
+.food-preview-note { align-self: stretch; }
+@media (max-width: 700px) {
+  .food-body { grid-template-columns: minmax(0, 1fr); }
+  .food-preview { position: static; }
+}
+.food-row { display: flex; flex-wrap: wrap; gap: 8px 10px; margin-bottom: 10px; }
+.food-row[hidden] { display: none; }
+.food-field { display: flex; flex-direction: column; gap: 3px; flex: 1 1 90px; min-width: 0; font-size: 11px; color: var(--muted); }
+.food-field-wide { flex: 1 1 200px; }
+.food-field input { width: 100%; padding: 5px 7px; border: 1px solid var(--gold-dim); border-radius: 0; background: var(--bg); font-size: 13px; color: var(--text); }
+.food-field input:focus { outline: 1px solid var(--gold); border-color: var(--gold); }
+.food-field-protein span { color: var(--protein); }
+.food-field-fat span { color: var(--fat); }
+.food-field-carbs span { color: var(--carbs); }
+.food-hint { flex: 2 1 220px; align-self: flex-end; color: var(--muted); font-size: 11px; }
+.food-toggle { display: flex; flex-wrap: wrap; align-items: center; row-gap: 4px; margin-bottom: 10px; color: var(--muted); }
+.food-toggle span { margin-right: 8px; font-size: 11px; }
+.food-toggle .toggle-btn { border-left: 0; font-size: 12px; }
+.food-toggle .toggle-btn:nth-child(2) { border-left: 1px solid var(--gold-dim); }
+.food-toggle .toggle-btn[aria-pressed="true"] { border-color: var(--gold); }
+.food-cats { margin-bottom: 4px; }
+.food-cat.is-suggested::before { content: "◆ "; font-size: 9px; vertical-align: 1px; }
+.food-suggest { margin-bottom: 12px; min-height: 1.4em; color: var(--muted); font-size: 12px; }
+.food-link { padding: 0; background: none; border: 0; color: var(--gold); cursor: pointer; font-size: 12px; text-decoration: underline; }
+.food-link:hover { color: var(--gold-bright); }
+.food-field-pics { margin-bottom: 12px; }
+.food-pics { display: flex; gap: 4px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: thin; scrollbar-color: var(--gold-dim) transparent; }
+.food-pic { flex: none; width: 38px; height: 38px; padding: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 0; cursor: pointer; color: var(--gold-bright); }
+.food-pic:hover { border-color: var(--gold); }
+.food-pic[aria-pressed="true"] { border-color: var(--gold-bright); box-shadow: inset 0 0 10px var(--glow-faint), 0 0 8px var(--glow-faint); }
+.food-pic-icon { display: block; width: 28px; height: 28px; }
+.food-status { min-height: 1.4em; margin-bottom: 10px; color: var(--muted); font-size: 12px; }
+.food-status.is-error { color: var(--caution); }
+.food-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.food-remove { margin-right: auto; }
+.food-close:focus-visible, .food-chip:focus-visible, .food-pic:focus-visible, .food-link:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 1px; }
+@media (prefers-reduced-motion: reduce) {
+  .food-form { animation: none; }
 }
 
 .card { cursor: pointer; transition: border-color .15s ease, box-shadow .2s ease; }
@@ -558,6 +644,7 @@ button, input, select { font: inherit; color: inherit; }
 .shelf-food-name { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .shelf-food-dots { flex: 1; min-width: 10px; border-bottom: 1px dotted var(--gold-dim); transform: translateY(-3px); }
 .shelf-food-amount { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.shelf-food-missing { color: var(--muted); font-style: italic; }
 
 .shelf-card-foot { margin-top: auto; padding-top: 8px; border-top: 3px double var(--gold-dim); text-align: left; }
 .shelf-card-line { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; font-variant-numeric: tabular-nums; }

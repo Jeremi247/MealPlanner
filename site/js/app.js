@@ -2,12 +2,24 @@
 (function (NM) {
   'use strict';
 
-  var foods = NM.Nutrition.normalise(NM.categories);
-  var byId = {};
-  foods.forEach(function (f) { byId[f.id] = f; });
+  // The foods of your own, as the server last gave them or this browser last saw them, and like
+  // the shelf, whether the server answered the latest request (docs/decisions/0026-your-own-foods-are-kept-on-the-server.md).
+  var cachedFoods = NM.FoodStore.cached();
+  var mine = { foods: cachedFoods ? NM.CustomFoods.clean(cachedFoods.doc) : [], online: false, loading: true };
 
+  // Every food, the table's and your own, rebuilt whenever your own change.
+  var foods, byId, foodsVersion = 0;
+  function buildFoods() {
+    foodsVersion++;
+    foods = NM.Nutrition.normalise(NM.CustomFoods.withCustom(NM.categories, mine.foods));
+    byId = {};
+    foods.forEach(function (f) { byId[f.id] = f; });
+  }
+  buildFoods();
+
+  // A meal keeps a food that is not known yet, as one of your own before they have loaded, or one
+  // removed on another device; it is shown, scored and shelved without it.
   var state = NM.Store.load();
-  state.meals = state.meals.map(function (m) { return m.filter(function (p) { return byId[p.id]; }); });
 
   var gridRoot = document.getElementById('grid');
   var plateRoot = document.getElementById('plate');
@@ -81,14 +93,14 @@
   }
 
   function shelve(anchor) {
-    var meal = typeof state.selected === 'number' ? state.meals[state.selected] : null;
-    if (!meal || !meal.length) return;
+    var meal = typeof state.selected === 'number' ? items(state.meals[state.selected]) : [];
+    if (!meal.length) return;
     var rows = rowNames();
     NM.Confirm.prompt(anchor, 'Shelve ' + mealName(state.selected), [
       { key: 'name', label: 'Name', value: '', max: NM.Shelf.NAME_MAX },
       { key: 'row', label: 'Row', value: rows[0] || '', max: NM.Shelf.ROW_MAX, choices: rows }
     ], 'Shelve', function (v) {
-      changeShelf({ op: 'add', name: v.name, row: v.row, items: meal.map(function (p) { return { id: p.id, ml: p.ml }; }) });
+      changeShelf({ op: 'add', name: v.name, row: v.row, items: meal.map(function (it) { return { id: it.food.id, ml: it.ml }; }) });
     });
   }
 
@@ -123,7 +135,7 @@
   };
 
   function items(meal) {
-    return meal.map(function (p) { return { food: byId[p.id], ml: p.ml }; });
+    return meal.filter(function (p) { return byId[p.id]; }).map(function (p) { return { food: byId[p.id], ml: p.ml }; });
   }
 
   function mealName(i) { return 'Meal ' + (i + 1); }
@@ -167,7 +179,7 @@
     });
   }
 
-  // An empty meal goes without asking.
+  // A meal that shows empty goes without asking, foods not known included.
   function removeMeal(i, anchor) {
     if (state.meals.length <= 1) return;
     function remove() {
@@ -176,7 +188,7 @@
       if (typeof state.selected === 'number' && state.selected >= i) state.selected = Math.max(0, state.selected - 1);
       update();
     }
-    if (!state.meals[i].length) remove();
+    if (!items(state.meals[i]).length) remove();
     else NM.Confirm.ask(anchor, 'Remove ' + mealName(i) + ' and everything on it?', 'Remove', remove);
   }
 
@@ -193,6 +205,9 @@
   // one, so a tile that moved band says so however often the view re-renders. A change of
   // what the tiles are scored against is a different measure, and drops it.
   var lastBasis = null, lastKey = null, lastRanked = null, before = null;
+
+  // What the last render scored the tiles against, so the food box's preview is scored alike.
+  var fitNow = null;
 
   // A render replaces every control, so the one that had focus is found again by its
   // `data-focus` key. A control whose row is gone leaves focus where the browser puts it.
@@ -212,8 +227,12 @@
       ? NM.Fit.rank(foods, meals[state.selected].items, NM.Fit.mealShare(state.target, meals.length))
       : NM.Fit.rank(foods, day, state.target, meals.length);
     var subject = byMeal ? mealName(state.selected) : 'the day';
+    fitNow = byMeal
+      ? { items: meals[state.selected].items, target: NM.Fit.mealShare(state.target, meals.length), meals: 1, subject: subject }
+      : { items: day, target: state.target, meals: meals.length, subject: subject };
     // The number of meals is part of the measure: it sets each meal's share.
-    var basis = (byMeal ? 'meal:' + state.selected : 'day') + '/' + meals.length;
+    // So is the list of foods: a food of your own edited or loaded is not a change to the day.
+    var basis = (byMeal ? 'meal:' + state.selected : 'day') + '/' + meals.length + '/' + foodsVersion;
     if (basis !== lastBasis) { lastBasis = basis; lastKey = null; lastRanked = null; before = null; }
     var key = JSON.stringify([state.meals, state.target]);
     if (key !== lastKey) { before = lastRanked; lastKey = key; }
@@ -313,7 +332,7 @@
     shelfTab.textContent = shelfOpen ? '»' : '«';
     shelfSub.textContent = 'Premade meals, coloured by how each would balance ' +
       (byMeal ? subject + ', against its share of the day.' : 'the whole day.');
-    var selectedMeal = typeof state.selected === 'number' ? state.meals[state.selected] : null;
+    var selectedMeal = typeof state.selected === 'number' ? items(state.meals[state.selected]) : null;
     shelfSave.textContent = '+ Shelve ' + (into || 'a meal');
     shelfSave.disabled = !shelf.online || !selectedMeal || !selectedMeal.length;
     shelfSave.title = !shelf.online ? 'The shelf cannot be reached'
@@ -335,6 +354,65 @@
   shelfSearch.addEventListener('input', function () { shelfQuery = shelfSearch.value; update(); });
   shelfSave.addEventListener('click', function () { shelve(shelfSave); });
   refreshShelf();
+
+  // Takes a list of your own foods from the server. The foods are rebuilt only when it differs,
+  // since a rebuild drops the tiles' change arrows.
+  function takeFoods(doc) {
+    var list = NM.CustomFoods.clean(doc);
+    if (JSON.stringify(list) === JSON.stringify(mine.foods)) return;
+    mine.foods = list;
+    buildFoods();
+  }
+
+  // What the food box shows of the foods' state; given again whenever it changes while the box is open.
+  function foodState() {
+    return {
+      foods: mine.foods, online: mine.online,
+      note: location.protocol === 'file:'
+        ? 'This page was opened as a file, so it cannot keep foods of your own. Run Serve.bat, which opens it at http://127.0.0.1:8737/.'
+        : mine.loading ? 'Fetching your foods…' : 'Your foods cannot be reached, so they cannot be changed until they are back.'
+    };
+  }
+
+  // Fetches the foods of your own. A failure leaves them as last seen, and unchangeable.
+  function refreshFoods() {
+    NM.FoodStore.load(function (err, doc) {
+      mine.loading = false;
+      mine.online = !err;
+      if (!err) takeFoods(doc);
+      NM.FoodForm.update(foodState());
+      update();
+    });
+  }
+
+  // Sends one change to the foods of your own; `done(error)` once the server has answered.
+  function changeFoods(op, done) {
+    NM.FoodStore.send(op, function (err, doc, answered) {
+      if (err) {
+        if (!answered) { mine.online = false; NM.FoodForm.update(foodState()); }
+        done(err);
+        return;
+      }
+      takeFoods(doc);
+      mine.online = true;
+      update();
+      done(null);
+    });
+  }
+
+  function openFoodForm(editing) {
+    NM.FoodForm.show(Object.assign(foodState(), {
+      editing: editing, icons: state.view.icons, opener: foodAdd,
+      subject: fitNow.subject,
+      score: function (food) { return NM.Fit.rank([food], fitNow.items, fitNow.target, fitNow.meals).results[food.id]; },
+      onSave: function (food, id, done) { changeFoods(id ? { op: 'edit', id: id, food: food } : { op: 'add', food: food }, done); },
+      onRemove: function (food, done) { changeFoods({ op: 'remove', id: food.id }, done); }
+    }));
+  }
+
+  var foodAdd = document.getElementById('food-add');
+  foodAdd.addEventListener('click', function () { refreshFoods(); openFoodForm(null); });
+  refreshFoods();
 
   var search = document.getElementById('search');
   var sort = document.getElementById('sort');

@@ -12,18 +12,19 @@
   function low(v) { return Array.isArray(v) ? v[0] : v; }
   function high(v) { return Array.isArray(v) ? v[1] : v; }
 
-  // One record per food, whatever basis its category is listed on.
+  // One record per food, listed per portion when the row counts one in a `unit`, and per 100 ml
+  // otherwise. Every table row in the fat category is per portion; a food of your own may be either.
   function normalise(categories) {
     var out = [];
     categories.forEach(function (cat) {
       cat.foods.forEach(function (f, order) {
-        var perPortion = cat.basis === 'perPortion';
+        var perPortion = !!f.unit;
         var basisMl = perPortion ? f.portionMl : 100;
         var unit = perPortion ? { name: f.unit.name, ml: f.portionMl / f.unit.per } : null;
         var rec = {
           id: f.id, name: f.name, category: cat.id, order: order,
           prep: f.prep || '', portion: f.portion || null, portionMl: f.portionMl || null,
-          est: f.est || [],
+          est: f.est || [], custom: !!f.custom, icon: f.icon || null,
           perMl: {}, range: {}, listed: {},
           gPerMl: f.grams / basisMl,
           raw: f.raw || null,

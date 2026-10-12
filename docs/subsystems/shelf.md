@@ -1,6 +1,6 @@
 # Shelf
 
-Scope: the shelf of premade meals: `site/js/core/shelf.js`, `site/js/shelf-store.js`, `site/js/ui/shelf.js`, the shelf's part of `site/js/app.js` and `site/css/app.css`, and `Server/shelf.py`. Where it is kept, and why on the server, is [0023](../decisions/0023-the-shelf-is-kept-on-the-server.md). How a card's band is computed is [fit scoring](fit-scoring.md).
+Scope: the shelf of premade meals: `site/js/core/shelf.js`, `site/js/server-store.js`, `site/js/ui/shelf.js`, the shelf's part of `site/js/app.js` and `site/css/app.css`, and `Server/shelf.py`. Where it is kept, and why on the server, is [0023](../decisions/0023-the-shelf-is-kept-on-the-server.md). How a card's band is computed is [fit scoring](fit-scoring.md).
 
 A premade meal holds rows as a meal of the day does, `{ id, ml }`: volumes, never weights ([critical assumptions](../architecture/critical-assumptions.md#volume-not-weight)). Its totals are worked out from the table when it is shown, and never stored.
 
@@ -49,13 +49,13 @@ Neither changes the shelf, and both work with the server unreachable.
 
 ## Changes and the server
 
-Each change is one operation sent to `Server/shelf.py`, which answers with the whole shelf. The server refuses a name over 60 characters, a row over 40, a meal of no foods or over 60, an amount not in 0–20 000 ml, or a food id that is not one. A refused change shows *Not saved* and the reason until the next one succeeds.
+Each change is one operation sent to `Server/shelf.py`, which answers with the whole shelf. The server refuses a name over 60 characters, a row over 40, a meal of no foods or over 60, an amount not in 0–20 000 ml, or a food id that is not one. A food of your own is one ([0026](../decisions/0026-your-own-foods-are-kept-on-the-server.md)). A refused change shows *Not saved* and the reason until the next one succeeds.
 
 **When the server cannot be reached**, the shelf shows the copy this browser last saw and says when it was seen. Shelve, Rename, Copy, Remove, the grips and the rows' names are greyed out, and nothing can be dragged. Opening the shelf again tries again.
 
 **Locally, `Server/shelf.py` will not start on a port already served**, and `Serve.bat` stays open to say so. On Windows a second server would otherwise bind beside the first and get none of its requests, leaving an old static server answering *the shelf answered 404*.
 
-A meal whose food has left the table is shown without it, and a meal left with no food is not shown.
+A meal holding a food not known, one gone from the table or a food of your own removed or not yet loaded, is shown and scored without it, with a line counting the foods *not found*. A meal none of whose foods is found stays on the shelf so it can be removed, with Into and New meal greyed out.
 
 ## Open questions
 
