@@ -193,12 +193,40 @@
     card.appendChild(el('h3', null, 'Daily target'));
     card.appendChild(targetForm(ctx.target, ctx.onTarget));
     card.appendChild(summary(ctx.dayTotals, ctx.target));
-    // Always shown, so selecting the day never resizes its card.
+    // Always shown, so splitting a meal never resizes the day card; nor selecting the day, the hint.
+    var splitMeals = ctx.meals.filter(function (m) { return m.portions > 1 && m.items.length; }).length;
+    card.appendChild(el('p', 'day-split', 'Counts one portion of each meal: ' +
+      (!splitMeals ? 'none is split.' : splitMeals === 1 ? 'one meal is split.' : splitMeals + ' meals are split.')));
     var hint = el('p', 'day-hint', 'Select a meal below to add foods to it.');
     if (ctx.refused !== null) NM.Fx.refuse(hint, ctx.refused);
     card.appendChild(hint);
     selectOnClick(card, onSelect);
     return card;
+  }
+
+  // How many portions the meal makes, and what the day counts of it.
+  function split(meal, i, ctx) {
+    var line = el('div', 'meal-split');
+    line.appendChild(el('span', 'meal-split-label', 'Splits into'));
+    line.appendChild(NM.Portions.stepper(meal.portions, 'portions:' + i, meal.name, false,
+      function (v) { ctx.onPortions(i, v); }));
+    var note = el('span', 'meal-split-note');
+    if (meal.portions === 1) note.textContent = 'Eaten whole';
+    else {
+      note.appendChild(document.createTextNode('Day counts '));
+      note.appendChild(el('b', null, '1 of ' + meal.portions));
+    }
+    line.appendChild(note);
+    return line;
+  }
+
+  // The sum of a meal's rows, under them, beside the bars' one portion.
+  function recipe(t) {
+    var line = el('div', 'meal-recipe');
+    line.appendChild(el('span', 'meal-recipe-label', 'Whole recipe'));
+    line.appendChild(el('span', null, F.num(t.volume) + ' ml · ' + F.num(t.kcal, 0) + ' kcal · P ' + F.num(t.protein) +
+      ' · F ' + F.num(t.fat) + ' · C ' + F.num(t.carbs)));
+    return line;
   }
 
   function mealCard(meal, i, ctx) {
@@ -218,8 +246,13 @@
       head.appendChild(rm);
     }
     card.appendChild(head);
+    card.appendChild(split(meal, i, ctx));
 
+    // The bars are one portion; the rows below them are the whole recipe. The rule above the bars
+    // is drawn at every count and captioned once split, so splitting never resizes the card.
+    var n = meal.portions;
     var bars = el('div', 'meal-bars');
+    if (n > 1) bars.appendChild(NM.Portions.caption(n, ''));
     MEAL_FIELDS.forEach(function (k) { bars.appendChild(bar(k, meal.totals[k], share[k])); });
     card.appendChild(bars);
     if (selected) {
@@ -229,6 +262,7 @@
         var ul = el('ul', 'items');
         meal.items.forEach(function (it) { ul.appendChild(itemRow(it.food, it.ml, ctx.onSet, ctx.icons)); });
         card.appendChild(ul);
+        card.appendChild(recipe(meal.whole));
       }
     }
     selectOnClick(card, onSelect);
@@ -239,7 +273,7 @@
   var GLIDE_MS = 250;
   var GLIDE_EASE = 'cubic-bezier(.22, .8, .28, 1)';
   // What a card shows only while selected: it fades in on opening and out on closing.
-  var OPEN_PARTS = '.items, .empty-note';
+  var OPEN_PARTS = '.items, .empty-note, .meal-recipe';
 
   function cardKey(card) {
     var t = card.querySelector('.card-title');
@@ -320,9 +354,10 @@
     });
   }
 
-  // `ctx`: { target (daily), meals [{ name, items [{food, ml}], totals }], dayTotals, selected (index
+  // `ctx`: { target (daily), meals [{ name, items [{food, ml}] (the whole recipe), portions, totals (one
+  // portion's), whole (the recipe's) }], dayTotals (one portion of each meal), selected (index
   // or 'day'), refused (ms since a tile click was refused for the day being selected, while it plays, or null), icons (an Icons style), onTarget(k, v),
-  // onSelect(index | 'day'), onSet(food, ml) on the selected meal, onClear(index, button), onClearAll(button), onAddMeal,
+  // onSelect(index | 'day'), onSet(food, ml) on the selected meal, onPortions(index, count), onClear(index, button), onClearAll(button), onAddMeal,
   // onRemoveMeal(index, button), each given the button clicked,
   // removed (the index of a meal removed since the last render, or null) }.
   //

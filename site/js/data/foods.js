@@ -2,8 +2,8 @@
 // portion, which is per its listed portion and carries that portion's volume.
 // A value is a number, or [min, max] where the source gives a range.
 // `grams` is the weight of that volume or portion, shown and never scored (docs/decisions/0007-weight-is-shown-as-an-estimate.md).
-// `raw`, on a food usually weighed before boiling, gives that weight: `perG` grams before
-// boiling per gram as prepared, an average, and the `word` it is shown with.
+// `raw`, on a food usually weighed before cooking, gives that weight: `perG` grams before
+// cooking per gram as prepared, an average, and the `word` it is shown with.
 // `est` names the fields not taken from Jeremi's reference table — see docs/subsystems/food-data.md.
 (function (NM) {
   'use strict';
@@ -22,7 +22,7 @@
     { id: 'turkey', name: 'Turkey', prep: 'Roasted, skinless, diced', kcal: 100, grams: 68, protein: 17, fat: 2.9, carbs: 0, est: ['carbs'] },
     { id: 'chicken-thigh', name: 'Chicken thigh meat', prep: 'Roasted, skinless, boneless, diced', kcal: 106, grams: 59, protein: 14.7, fat: 4.8, carbs: 0, est: ['carbs'] },
     { id: 'chicken-gizzards', name: 'Chicken gizzards', prep: 'Simmered, diced', kcal: 93, grams: 60, protein: 18.5, fat: 1.6, carbs: 0, est: ['carbs'] },
-    { id: 'cod', name: 'Cod', prep: 'Steamed, flaked', kcal: 49, grams: 47, protein: 11, fat: 0.3, carbs: 0, est: ['carbs'] },
+    { id: 'cod', name: 'Cod', prep: 'Steamed, flaked', kcal: 49, grams: 47, protein: 11, fat: 0.3, carbs: 0, est: ['carbs'], raw: { word: 'raw', perG: 1.25 } },
     { id: 'canned-salmon', name: 'Canned salmon', prep: 'Drained, flaked, not oil-packed', kcal: 91, grams: 65, protein: 13, fat: 4, carbs: 0, est: ['carbs'] },
     { id: 'crab', name: 'Crab meat', prep: 'Cooked, loosely flaked', kcal: 51, grams: 61, protein: 10, fat: 0.9, carbs: 0, est: ['carbs'] },
     { id: 'lobster', name: 'Lobster meat', prep: 'Boiled or steamed, pieces', kcal: 60, grams: 67, protein: 12.5, fat: 0.4, carbs: 0.8, est: ['carbs'] },

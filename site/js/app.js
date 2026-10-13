@@ -64,12 +64,16 @@
   }
 
   // Sends one change. `local`, if given, is the shelf's meals as the change leaves them, shown
-  // until the server answers; a change it refuses or never gets puts the shelf back.
+  // until the server answers; a change it refuses or never gets puts the shelf back. Only the
+  // latest change's answer is shown: an earlier one, landing after a later change was shown,
+  // would step the shelf back, and a − or + clicked then would step from there.
+  var sent = 0;
   function changeShelf(op, local) {
     if (!shelf.online) return;
-    var was = shelf.meals;
+    var was = shelf.meals, mine = ++sent;
     if (local) { shelf.meals = local; update(); }
     NM.ShelfStore.send(op, function (err, doc, answered) {
+      if (mine !== sent) return;
       if (err && local && shelf.meals === local) shelf.meals = was;
       shelfAnswer(err, doc, answered);
     });
@@ -93,24 +97,28 @@
   }
 
   function shelve(anchor) {
-    var meal = typeof state.selected === 'number' ? items(state.meals[state.selected]) : [];
+    var at = typeof state.selected === 'number' ? state.meals[state.selected] : null;
+    var meal = at ? items(at.items) : [];
     if (!meal.length) return;
     var rows = rowNames();
     NM.Confirm.prompt(anchor, 'Shelve ' + mealName(state.selected), [
       { key: 'name', label: 'Name', value: '', max: NM.Shelf.NAME_MAX },
       { key: 'row', label: 'Row', value: rows[0] || '', max: NM.Shelf.ROW_MAX, choices: rows }
     ], 'Shelve', function (v) {
-      changeShelf({ op: 'add', name: v.name, row: v.row, items: meal.map(function (it) { return { id: it.food.id, ml: it.ml }; }) });
+      changeShelf({ op: 'add', name: v.name, row: v.row, portions: at.portions, items: meal.map(function (it) { return { id: it.food.id, ml: it.ml }; }) });
     });
   }
 
   var shelfActions = {
+    // The whole premade meal goes into the selected meal, which keeps its portions.
     onInto: function (m) {
       if (typeof state.selected !== 'number') return;
-      state.meals[state.selected] = NM.Shelf.into(state.meals[state.selected], m.items);
+      var meal = state.meals[state.selected];
+      meal.items = NM.Shelf.into(meal.items, m.items);
       update();
     },
-    onNewMeal: function (m) { state.meals.push(NM.Shelf.into([], m.items)); select(state.meals.length - 1); },
+    onNewMeal: function (m) { state.meals.push(NM.Store.meal(NM.Shelf.into([], m.items), m.portions)); select(state.meals.length - 1); },
+    onPortions: function (m, n) { changeShelf({ op: 'portions', id: m.id, portions: n }, NM.Shelf.withPortions(shelf.meals, m.id, n)); },
     onRename: function (m, anchor) {
       NM.Confirm.prompt(anchor, 'Rename “' + m.name + '”', [{ key: 'name', label: 'Name', value: m.name, max: NM.Shelf.NAME_MAX }],
         'Rename', function (v) { changeShelf({ op: 'rename', id: m.id, name: v.name }); });
@@ -141,7 +149,7 @@
   function mealName(i) { return 'Meal ' + (i + 1); }
 
   function setMl(food, ml) {
-    var meal = state.meals[state.selected];
+    var meal = state.meals[state.selected] && state.meals[state.selected].items;
     if (!meal) return;
     var i = meal.findIndex(function (p) { return p.id === food.id; });
     if (ml <= 0) { if (i >= 0) meal.splice(i, 1); }
@@ -153,28 +161,32 @@
   function addPortion(food) {
     if (state.selected === 'day') { played(food.id, 'refused'); update(); return; }
     played(food.id, 'add');
-    var cur = state.meals[state.selected].find(function (p) { return p.id === food.id; });
-    setMl(food, (cur ? cur.ml : 0) + food.defaultMl);
+    // One more default portion in each portion the meal makes.
+    var meal = state.meals[state.selected];
+    var cur = meal.items.find(function (p) { return p.id === food.id; });
+    setMl(food, (cur ? cur.ml : 0) + food.defaultMl * meal.portions);
   }
+
+  function setPortions(i, n) { state.meals[i].portions = n; update(); }
 
   function select(which) {
     if (state.selected === which) return;
     state.selected = which; update();
   }
 
-  function addMeal() { state.meals.push([]); select(state.meals.length - 1); }
+  function addMeal() { state.meals.push(NM.Store.meal()); select(state.meals.length - 1); }
 
   // Each asks first, beside `anchor`, the button that was clicked (NM.Confirm).
   function clearMeal(i, anchor) {
     NM.Confirm.ask(anchor, 'Clear ' + mealName(i) + '?', 'Clear', function () {
-      state.meals[i] = [];
+      state.meals[i].items = [];
       update();
     });
   }
 
   function clearAll(anchor) {
     NM.Confirm.ask(anchor, 'Clear every meal of the day?', 'Clear all', function () {
-      state.meals = state.meals.map(function () { return []; });
+      state.meals.forEach(function (m) { m.items = []; });
       update();
     });
   }
@@ -188,7 +200,7 @@
       if (typeof state.selected === 'number' && state.selected >= i) state.selected = Math.max(0, state.selected - 1);
       update();
     }
-    if (!items(state.meals[i]).length) remove();
+    if (!items(state.meals[i].items).length) remove();
     else NM.Confirm.ask(anchor, 'Remove ' + mealName(i) + ' and everything on it?', 'Remove', remove);
   }
 
@@ -215,20 +227,23 @@
     var active = document.activeElement;
     var focusKey = active && active.dataset ? active.dataset.focus : null;
     NM.Store.save(state);
+    // A meal's rows are its whole recipe; the day, the bars and the tiles count one portion of it
+    // (docs/decisions/0027-a-meal-says-how-many-portions-it-makes.md).
     var meals = state.meals.map(function (m, i) {
-      var its = items(m);
-      return { name: mealName(i), items: its, totals: NM.Nutrition.totals(its) };
+      var its = items(m.items);
+      var eaten = NM.Nutrition.perPortion(its, m.portions);
+      return { name: mealName(i), items: its, portions: m.portions, eaten: eaten, totals: NM.Nutrition.totals(eaten), whole: NM.Nutrition.totals(its) };
     });
-    var day = [].concat.apply([], meals.map(function (m) { return m.items; }));
+    var day = [].concat.apply([], meals.map(function (m) { return m.eaten; }));
     // Selection colours score the selected meal against its share of the day; with the day
     // selected they are the day colours.
     var byMeal = state.view.colours === 'selection' && state.selected !== 'day';
     var ranked = byMeal
-      ? NM.Fit.rank(foods, meals[state.selected].items, NM.Fit.mealShare(state.target, meals.length))
+      ? NM.Fit.rank(foods, meals[state.selected].eaten, NM.Fit.mealShare(state.target, meals.length))
       : NM.Fit.rank(foods, day, state.target, meals.length);
     var subject = byMeal ? mealName(state.selected) : 'the day';
     fitNow = byMeal
-      ? { items: meals[state.selected].items, target: NM.Fit.mealShare(state.target, meals.length), meals: 1, subject: subject }
+      ? { items: meals[state.selected].eaten, target: NM.Fit.mealShare(state.target, meals.length), meals: 1, subject: subject }
       : { items: day, target: state.target, meals: meals.length, subject: subject };
     // The number of meals is part of the measure: it sets each meal's share.
     // So is the list of foods: a food of your own edited or loaded is not a change to the day.
@@ -238,8 +253,9 @@
     if (key !== lastKey) { before = lastRanked; lastKey = key; }
     lastRanked = ranked;
 
-    // A tile shows how much of it the selected meal holds, or the whole day when the day is selected.
-    var scope = state.selected === 'day' ? day : meals[state.selected].items;
+    // A tile shows how much of it a portion of the selected meal holds, or the day when the day is selected.
+    var scope = state.selected === 'day' ? day : meals[state.selected].eaten;
+    var split = state.selected !== 'day' && meals[state.selected].portions > 1;
     var inScope = {};
     scope.forEach(function (it) { inScope[it.food.id] = (inScope[it.food.id] || 0) + it.ml; });
 
@@ -253,7 +269,7 @@
 
     NM.Grid.render(gridRoot, {
       categories: NM.categories, foods: foods, ranked: ranked, changes: NM.Fit.compare(before, ranked),
-      inScope: inScope, scopeLabel: state.selected === 'day' ? 'today' : 'in ' + mealName(state.selected),
+      inScope: inScope, scopeLabel: state.selected === 'day' ? 'today' : split ? 'per portion' : 'in ' + mealName(state.selected),
       addTo: state.selected === 'day' ? null : mealName(state.selected), subject: subject,
       effects: playing, view: state.view, onAdd: addPortion
     });
@@ -263,6 +279,7 @@
       onTarget: function (k, v) { state.target[k] = v; update(); },
       onSelect: select,
       onSet: setMl,
+      onPortions: setPortions,
       onClear: clearMeal,
       onClearAll: clearAll,
       onAddMeal: addMeal,
@@ -270,7 +287,7 @@
       removed: removed
     });
     removed = null;
-    renderShelf(meals, day, byMeal, subject);
+    renderShelf(meals, day, byMeal);
     document.getElementById('regime').textContent = (ranked.regime === 'empty'
       ? (byMeal ? subject + ' is empty' : 'Nothing eaten yet') + ': tiles show how balanced each food is on its own.'
       : 'Tiles show how one more portion would balance ' + (byMeal ? subject + ', against its share of the day.' : 'the whole day.'))
@@ -286,9 +303,11 @@
   }
 
   // The shelf's cards are coloured as the tiles are: against the day, or the selected meal and its share.
+  // A card's band scores what Into would add to the selected meal, its numbers one portion of its own.
   // They are built only while the shelf is open; opening it renders.
   function renderShelfBody(meals, day, byMeal, into) {
     var share = NM.Fit.mealShare(state.target, meals.length);
+    var intoPortions = typeof state.selected === 'number' ? meals[state.selected].portions : null;
     var all = NM.Shelf.clean({ meals: shelf.meals }, byId);
     var shown = all.filter(function (m) { return NM.Shelf.matches(m, shelfQuery, byId); });
     var rows = NM.Shelf.rows(shown).map(function (r) {
@@ -296,10 +315,11 @@
         name: r.name,
         entries: r.meals.map(function (m) {
           var its = items(m.items);
-          var totals = NM.Nutrition.totals(its);
+          var totals = NM.Nutrition.totals(NM.Nutrition.perPortion(its, m.portions));
+          var gained = NM.Nutrition.totals(NM.Shelf.gained(its, m.portions, intoPortions));
           var fit = byMeal
-            ? NM.Fit.scoreMeal(meals[state.selected].items, totals, share)
-            : NM.Fit.scoreMeal(day, totals, state.target, meals.length);
+            ? NM.Fit.scoreMeal(meals[state.selected].eaten, gained, share)
+            : NM.Fit.scoreMeal(day, gained, state.target, meals.length);
           return { meal: m, items: its, totals: totals, fit: fit };
         })
       };
@@ -317,22 +337,22 @@
     NM.ShelfView.render(shelfBody, {
       rows: rows, total: all.length, query: shelfQuery, online: shelf.online, note: note, into: into,
       share: share, icons: state.view.icons,
-      onInto: shelfActions.onInto, onNewMeal: shelfActions.onNewMeal, onRename: shelfActions.onRename, onCopy: shelfActions.onCopy,
+      onInto: shelfActions.onInto, onNewMeal: shelfActions.onNewMeal, onPortions: shelfActions.onPortions, onRename: shelfActions.onRename, onCopy: shelfActions.onCopy,
       onRemove: shelfActions.onRemove, onRenameRow: shelfActions.onRenameRow,
       onPlace: shelfActions.onPlace, onPlaceRow: shelfActions.onPlaceRow, onNewRow: shelfActions.onNewRow
     });
   }
 
-  function renderShelf(meals, day, byMeal, subject) {
+  function renderShelf(meals, day, byMeal) {
     var into = typeof state.selected === 'number' ? mealName(state.selected) : null;
     if (shelfOpen) renderShelfBody(meals, day, byMeal, into);
     document.body.classList.toggle('shelf-open', shelfOpen);
     shelfTab.setAttribute('aria-expanded', shelfOpen ? 'true' : 'false');
     shelfTab.setAttribute('aria-label', shelfOpen ? 'Close the shelf' : 'Open the shelf of premade meals');
     shelfTab.textContent = shelfOpen ? '»' : '«';
-    shelfSub.textContent = 'Premade meals, coloured by how each would balance ' +
-      (byMeal ? subject + ', against its share of the day.' : 'the whole day.');
-    var selectedMeal = typeof state.selected === 'number' ? items(state.meals[state.selected]) : null;
+    shelfSub.textContent = 'Premade meals, coloured by how ' + (into ? 'each put into ' + into : 'a portion of each') +
+      ' would balance ' + (byMeal ? 'it, against its share of the day.' : 'the whole day.');
+    var selectedMeal = typeof state.selected === 'number' ? items(state.meals[state.selected].items) : null;
     shelfSave.textContent = '+ Shelve ' + (into || 'a meal');
     shelfSave.disabled = !shelf.online || !selectedMeal || !selectedMeal.length;
     shelfSave.title = !shelf.online ? 'The shelf cannot be reached'

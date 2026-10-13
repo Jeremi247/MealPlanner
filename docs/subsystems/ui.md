@@ -1,10 +1,10 @@
 # UI
 
-Scope: `site/js/app.js`, `site/js/ui/` and `site/css/app.css` — the grid, the day and meal cards, and how state reaches them. It does not cover how a score is computed ([fit scoring](fit-scoring.md)).
+Scope: `site/js/app.js`, `site/js/ui/` and `site/css/app.css` — the grid, and how state reaches it and the sidebar. The sidebar's cards are [plate](plate.md). It does not cover how a score is computed ([fit scoring](fit-scoring.md)).
 
 ## State
 
-One object, owned by `app.js`: the daily `target`, `meals` (one `[{ id, ml }]` per meal), `selected` (a meal's index, or `'day'`) and `view` (sort, search, `colours`: `'day'` or `'selection'`, and `icons`: `'emoji'` or `'minimal'`). Every change goes through `update()`, which schedules one render for after the current event: save, rank, re-render both views. Nothing else holds state, except the shelf ([shelf](shelf.md)), the foods of your own as the server last gave them, and three things kept unsaved: the ranking from before the latest change to the meals or target, for the change arrows (dropped when what the tiles are scored against changes, which includes the number of meals and the list of foods), the tile clicks of the last 0.7 s, for their effects, and the meal removed since the last render, so the sidebar's glide matches each card with its own meal. The day's shape is [0011](../decisions/0011-a-day-of-meals-against-a-daily-target.md).
+One object, owned by `app.js`: the daily `target`, `meals` (one `{ items [{ id, ml }], portions }` per meal, its rows the whole recipe), `selected` (a meal's index, or `'day'`) and `view` (sort, search, `colours`: `'day'` or `'selection'`, and `icons`: `'emoji'` or `'minimal'`). Every change goes through `update()`, which schedules one render for after the current event: save, rank, re-render both views. Nothing else holds state, except the shelf ([shelf](shelf.md)), the foods of your own as the server last gave them, and three things kept unsaved: the ranking from before the latest change to the meals or target, for the change arrows (dropped when what the tiles are scored against changes, which includes the number of meals and the list of foods), the tile clicks of the last 0.7 s, for their effects, and the meal removed since the last render, so the sidebar's glide matches each card with its own meal. The day's shape is [0011](../decisions/0011-a-day-of-meals-against-a-daily-target.md). **The day counts one portion of each meal**: the totals, the bars, the tiles and the shelf's colours work on its rows divided by its portions ([0027](../decisions/0027-a-meal-says-how-many-portions-it-makes.md)).
 
 ## The grid
 
@@ -16,7 +16,7 @@ One section per category, in the table's order. A tile shows, from top to bottom
 - kcal as listed
 - protein, fat and carbs as listed; `~` marks a non-zero estimate
 - a bar per macro of its grams on the listed basis: a glowing tube up to a tick at 10 g, then white-hot past it, with up to 10 g more squeezed into the last quarter ([0019](../decisions/0019-tile-macros-are-drawn-in-grams.md))
-- what a click adds, and under it how much the selected meal already holds, a fat portion in its unit ([0020](../decisions/0020-a-portion-is-counted-in-its-own-unit.md)) (the whole day when the day is selected), each with its estimated weight
+- what a click adds, and under it how much the selected meal already holds, a fat portion in its unit ([0020](../decisions/0020-a-portion-is-counted-in-its-own-unit.md)) (the whole day when the day is selected), each with its estimated weight. For a split meal both are one portion's, the second labelled *per portion*, and a click adds the amount to each portion.
 - after a change to the meals or target, a green ↑ or red ↓ on the picture's corner if the tile moved band, from `Fit.compare`. It stays until the next change, and leaving or entering the empty plate shows none
 - on hover or focus, its band, why it moved if it did, and up to three reasons behind its colour, as an overlay that does not move the grid
 
@@ -34,24 +34,7 @@ Every food is shown alike ([0018](../decisions/0018-every-food-is-shown-alike.md
 
 ## The day and its meals
 
-The sidebar is a stack of cards: the day, then one card per meal, then **+ Add meal**. Clicking a card, or its title, selects it. A click on a control inside a card does only what the control does. One card is selected at a time, outlined in the accent colour. A card whose height changes glides to it, and the sidebar never scrolls on its own: there is always room below the last card to keep its position ([0017](../decisions/0017-cards-glide-to-their-new-height.md)). **Asking first** is a small box dropped from the button clicked, with Cancel and the action ([0021](../decisions/0021-a-confirmation-drops-from-its-button.md)). The shelf opens from a tab on the sidebar's left edge ([shelf](shelf.md)).
-
-**The day card**
-
-- **Clear all** in its head empties every meal, asking first, and keeps the meals. It is greyed out while the day is empty.
-- **Daily target**: five number inputs, in the order kcal, volume, protein, fat, carbs. A warning appears when protein, fat and carbs add up to more than 10 % away from the kcal target.
-- **Totals** of every meal: total volume as the headline, the day's ml per 100 kcal, then a bar per dimension in the target's order. Past its target a bar rescales and the overshoot is hatched red.
-- **Short on**: the day's most-missing balance dimensions, or *Nothing added yet* while the day is empty.
-- Always, a line asking for a meal to add foods to, so selecting the day never resizes the card; dimmed while a meal is selected. A tile clicked while the day is selected adds nothing.
-
-**A meal card**
-
-- Its name, how many foods it holds and **Clear**, then bars for volume, protein and carbs against the meal's share of the day, on every meal whether selected or not. Clear empties that meal without selecting it, asking first, and is greyed out while the meal is empty.
-- Selected, its rows as well. Selection changes nothing else on the card.
-- **×** removes the meal, asking first if it holds food. The last meal has no ×. Meals are named by position, so removing one renumbers the rest.
-- **Rows**: the food's picture and name, under it its preparation or, for a fat portion, its count (`3x egg`, `1.5x tbsp`), and −/+ by the food's step to the next whole step, or type an ml value. Zero removes the row. Under the ml is the estimated weight, which is also an input. A weight typed there is converted to ml ([0008](../decisions/0008-a-weight-can-be-typed-in-and-is-stored-as-ml.md)). A food with a weight before boiling ([food data](food-data.md)) shows it at the right end of its macros line, as `dry ~35 g`.
-
-A weight is always marked `~` and carries a tooltip ([0007](../decisions/0007-weight-is-shown-as-an-estimate.md)). There is no weight total.
+The sidebar's day card and meal cards, and how a meal is split into portions, are [plate](plate.md).
 
 ## Rules
 
@@ -63,6 +46,7 @@ A weight is always marked `~` and carries a tooltip ([0007](../decisions/0007-we
 - The layout stacks below 900 px, with the day and meals above the grid.
 
 ## See also
+- [Plate](plate.md) — the day card and the meal cards
 - [Fit scoring](fit-scoring.md) — what `norm` means
 - [Your foods](your-foods.md) — the box a food of your own is added in
 - [JS style](../conventions/js-style.md) — the namespace and script order

@@ -107,10 +107,10 @@
 
   // Boiling swells a grain about threefold and barely moves a potato, peel aside. A factor
   // outside that is a typo, or cooked-per-raw entered the wrong way round.
-  T.test('Data.AWeightBeforeBoilingIsMarkedPlausibleAndNamed', function () {
+  T.test('Data.AWeightBeforeCookingIsMarkedPlausibleAndNamed', function () {
     foods.filter(function (f) { return f.raw; }).forEach(function (f) {
-      T.ok(f.est.indexOf('raw') >= 0, f.id + ': weight before boiling is an estimate, so marked as one');
-      T.ok(f.raw.perG >= 0.25 && f.raw.perG <= 1.3, f.id + ': ' + f.raw.perG + ' g before boiling per g');
+      T.ok(f.est.indexOf('raw') >= 0, f.id + ': weight before cooking is an estimate, so marked as one');
+      T.ok(f.raw.perG >= 0.25 && f.raw.perG <= 1.3, f.id + ': ' + f.raw.perG + ' g before cooking per g');
       T.ok(typeof f.raw.word === 'string' && f.raw.word.length > 0, f.id + ': says what the weight is of');
     });
   });

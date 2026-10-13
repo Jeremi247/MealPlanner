@@ -27,7 +27,7 @@
 
   // An estimated weight of food, marked as an estimate (docs/decisions/0004-estimates-are-marked-not-hidden.md).
   var GRAMS_TITLE = 'Estimated weight — not from the reference table';
-  var RAW_TITLE = 'Estimated weight before boiling — an average, not from the reference table';
+  var RAW_TITLE = 'Estimated weight before cooking — an average, not from the reference table';
   function grams(g) { return '~' + num(g, 0) + ' g'; }
 
   // An amount of a food as it is counted: "23x almond", "1.5x tbsp", or "150 ml" for a food

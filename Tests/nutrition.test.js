@@ -28,6 +28,22 @@
     T.eq(N.units(food('broccoli'), 100), null, 'a food measured in ml');
   });
 
+  T.test('Nutrition.APortionOfAMealIsItsRowsDividedByItsPortions', function () {
+    var rows = [{ id: 'cod', ml: 600 }, { food: food('oil'), ml: 22.5 }];
+    var one = N.perPortion(rows, 3);
+    T.eq(one[0].ml + '/' + one[0].id, '200/cod', 'each row divided, the rest of it kept');
+    T.eq(one[1].ml + '/' + one[1].food.id, '7.5/oil', 'a row of a food record too');
+    T.eq(rows[0].ml, 600, 'the rows it was given are not changed');
+    var whole = N.totals([{ food: food('cod'), ml: 600 }]), third = N.totals(N.perPortion([{ food: food('cod'), ml: 600 }], 3));
+    T.near(third.kcal * 3, whole.kcal, 1e-9, 'three portions add up to the meal');
+    T.eq(N.perPortion(rows, 1)[0].ml, 600, 'a meal of one portion is all of it');
+  });
+
+  T.test('Nutrition.PortionsAreAWholeNumberFromOneToTwenty', function () {
+    T.eq([1, 3, 20].map(N.portions).join(','), '1,3,20', 'kept');
+    T.eq([0, -2, 1.5, 21, '3', null, undefined, NaN, true].map(N.portions).join(','), '1,1,1,1,1,1,1,1,1', 'anything else is one');
+  });
+
   T.test('Nutrition.APlusOrMinusLandsOnAWholeStep', function () {
     var e = food('eggs'), c = food('cashews');
     T.eq(N.stepped(e, 100, 1), 150, '2 eggs, plus');
@@ -66,9 +82,10 @@
     T.near(N.grams(food('broccoli'), 250), 95, 1e-9, 'broccoli 250 ml');
   });
 
-  T.test('Nutrition.WeightBeforeBoilingScalesWithTheWeightAsPrepared', function () {
+  T.test('Nutrition.WeightBeforeCookingScalesWithTheWeightAsPrepared', function () {
     T.near(N.rawGrams(food('white-rice'), 150), 150 * 0.67 * 0.35, 1e-9, 'rice 150 ml, dry');
     T.near(N.rawGrams(food('potatoes'), 100), 66 * 1.15, 1e-9, 'potatoes 100 ml, unpeeled');
+    T.near(N.rawGrams(food('cod'), 600), 600 * 0.47 * 1.25, 1e-9, 'cod 600 ml, raw');
     T.eq(N.rawGrams(food('broccoli'), 250), null, 'a food without one');
   });
 

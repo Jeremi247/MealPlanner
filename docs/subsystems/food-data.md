@@ -13,7 +13,7 @@ Scope: `site/js/data/foods.js`, the normalisation in `site/js/core/nutrition.js`
 | `portion`, `portionMl` | Portion foods only: the portion as listed, and the volume it fills |
 | `unit` | Portion foods only: what the portion is counted in — `per` units to a portion, with the unit's singular `name`, and a `step` of ½ for a spoon or an avocado ([0020](../decisions/0020-a-portion-is-counted-in-its-own-unit.md)) |
 | `grams` | The weight of the row's basis, always estimated ([0007](../decisions/0007-weight-is-shown-as-an-estimate.md)). Normalised to `gPerMl`; shown, and converts a typed weight to ml; never summed or scored |
-| `raw` | Foods usually weighed before boiling: `perG`, grams before boiling per gram as prepared, and the `word` it is shown with (`dry`, `unpeeled`). An average, always estimated, shown only |
+| `raw` | Foods usually weighed before cooking: `perG`, grams before cooking per gram as prepared, and the `word` it is shown with (`dry`, `unpeeled`, `raw`). An average, always estimated, shown only |
 
 **Per portion** when the row has a `unit`, and **per 100 ml** otherwise. Every table row in fat is per portion and every other table row per 100 ml, as the category's `basis` says. A food of your own may be either in any category; one in fat per 100 ml adds 15 ml a click and steps by 5.
 
@@ -32,7 +32,7 @@ Scope: `site/js/data/foods.js`, the normalisation in `site/js/core/nutrition.js`
 - **Carbs** — the table only for potatoes and rice. Elsewhere estimated from per-100 g references and the row's own kcal-per-ml density. Fibre is counted in carbs.
 - **Protein, fat and carbs of volume foods** — estimated the same way; the table lists only their kcal.
 - **`grams`** — estimated for every row, by the method in [0007](../decisions/0007-weight-is-shown-as-an-estimate.md#how-a-weight-is-made).
-- **`raw`** — an averaged yield, not a measured one: rice about triples when boiled (0.35), and a peeled boiled potato weighs what it did raw, plus about 15% for the peel (1.15). Adding it to another food is one field.
+- **`raw`** — an averaged yield, not a measured one: rice about triples when boiled (0.35), and a peeled boiled potato weighs what it did raw, plus about 15% for the peel (1.15). Cod loses about a fifth of its weight steaming (1.25: about 82 kcal per 100 g raw against the table's 104 cooked). Adding it to another food is one field.
 - **`portionMl`** — measured spoon volumes for tbsp portions; estimated for counted items (almonds, olives, eggs).
 
 `Data.MacrosRoughlyAccountForTheListedKcal` holds every row's macros to its kcal within a tolerance, which catches a typo but not a careful wrong estimate. Checking the estimates against a source is [P1](../todo/P1/verify-estimated-macros.md).

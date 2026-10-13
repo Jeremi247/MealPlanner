@@ -481,6 +481,57 @@ button, input, select { font: inherit; color: inherit; }
 .card-meal.is-selected .meal-bars { margin-bottom: 6px; }
 .day-hint { margin-top: 10px; color: var(--muted); font-size: 13px; }
 .card-day:not(.is-selected) .day-hint { opacity: .5; }
+/* How many portions a meal makes (site/js/ui/portions.js): − and + as square gold keys, the count
+   lit between them. A meal card has it on a line of its own under the head, smaller. */
+.portions { display: flex; align-items: center; justify-content: center; }
+.portions-key {
+  width: 30px; height: 30px; padding: 0; border: 1px solid var(--gold-dim); border-radius: 0; background: var(--surface);
+  color: var(--gold); font-family: var(--font-neon); font-size: 18px; line-height: 1; cursor: pointer;
+  transition: border-color .15s, color .15s, box-shadow .15s, background .15s;
+}
+.portions-key:hover:not(:disabled, [aria-disabled="true"]) { border-color: var(--gold); color: var(--gold-bright); box-shadow: 0 0 10px var(--glow-faint); background: color-mix(in srgb, var(--gold) 12%, var(--surface)); }
+.portions-key:active:not(:disabled, [aria-disabled="true"]) { background: var(--gold); color: var(--bg); }
+.portions-key:disabled, .portions-key[aria-disabled="true"] { opacity: .35; cursor: default; }
+.portions-key:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 1px; }
+.portions-mid {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: text;
+  height: 30px; min-width: 76px; padding: 0 6px; border-top: 1px solid var(--gold-dim); border-bottom: 1px solid var(--gold-dim);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 7%, var(--tile)), var(--tile));
+}
+.portions-mid:focus-within { box-shadow: inset 0 -1px 0 var(--gold-bright); }
+.portions-count {
+  width: 3ch; padding: 0; margin: -1px 0 -2px; background: none; border: 0; text-align: center;
+  font-family: var(--font-neon); font-size: 18px; line-height: 1.05; color: var(--gold-bright); text-shadow: 0 0 8px var(--glow);
+  -moz-appearance: textfield; appearance: textfield;
+}
+.portions-count::-webkit-outer-spin-button, .portions-count::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.portions-count:focus { outline: none; }
+.portions-count:disabled { color: var(--muted); text-shadow: none; }
+.portions-word { font-family: var(--font-deco); font-weight: 700; font-size: 8.5px; letter-spacing: .24em; text-transform: uppercase; color: var(--muted); line-height: 1; }
+/* What a split card's numbers are, sitting on the rule above them. Its parent is positioned. */
+.portions-cap {
+  position: absolute; top: -9px; left: 50%; transform: translateX(-50%); padding: 0 8px; background: var(--tile); white-space: nowrap;
+  font-family: var(--font-deco); font-weight: 700; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--gold);
+}
+.portions-cap em { font-style: normal; color: var(--muted); letter-spacing: .12em; }
+
+.meal-split { display: flex; align-items: center; gap: 10px; margin: -2px 0 12px; }
+.meal-split .portions-key { width: 26px; height: 26px; font-size: 16px; }
+.meal-split .portions-mid { height: 26px; min-width: 70px; }
+.meal-split .portions-count { font-size: 16px; }
+.meal-split-label { color: var(--muted); font-size: 11px; }
+.meal-split-note { margin-left: auto; color: var(--muted); font-size: 11px; text-align: right; }
+.meal-split-note b { font-weight: 400; color: var(--gold); }
+/* The rule is there at every count, its caption only once split: the same height either way. */
+.meal-bars { position: relative; padding-top: 12px; border-top: 1px solid var(--gold-dim); }
+.meal-bars .portions-cap { top: -8px; background: var(--surface); font-size: 9.5px; }
+.meal-recipe {
+  display: flex; justify-content: space-between; gap: 8px; padding-top: 7px; border-top: 3px double var(--gold-dim);
+  color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.meal-recipe-label { flex: none; font-family: var(--font-deco); font-weight: 700; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); }
+.day-split { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.3; }
+
 .add-meal {
   background: none; border: 1px dashed var(--gold-dim); border-radius: 0; padding: 11px;
   color: var(--gold); font-family: var(--font-deco); font-weight: 700; letter-spacing: .16em; text-transform: uppercase; cursor: pointer;
@@ -637,6 +688,9 @@ button, input, select { font: inherit; color: inherit; }
 .shelf-card-meter::after { background: linear-gradient(270deg, transparent, var(--gold-dim)); }
 .shelf-card-word { font-family: var(--font-deco); font-weight: 700; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; }
 
+.shelf-card .portions { margin-top: 10px; }
+.shelf-foods-cap { margin-top: 10px; color: var(--muted); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; text-align: left; }
+.shelf-foods-cap + .shelf-foods { margin-top: 4px; }
 .shelf-foods { list-style: none; margin: 10px 0; padding: 0; display: flex; flex-direction: column; gap: 4px; text-align: left; }
 .shelf-food { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12px; }
 .shelf-food-icon { width: 20px; height: 20px; flex: none; }
@@ -646,7 +700,7 @@ button, input, select { font: inherit; color: inherit; }
 .shelf-food-amount { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .shelf-food-missing { color: var(--muted); font-style: italic; }
 
-.shelf-card-foot { margin-top: auto; padding-top: 8px; border-top: 3px double var(--gold-dim); text-align: left; }
+.shelf-card-foot { position: relative; margin-top: auto; padding-top: 12px; border-top: 3px double var(--gold-dim); text-align: left; }
 .shelf-card-line { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; font-variant-numeric: tabular-nums; }
 .shelf-card-line b { font-family: var(--font-neon); font-weight: 400; font-size: 14px; }
 .shelf-card-line span { color: var(--muted); }

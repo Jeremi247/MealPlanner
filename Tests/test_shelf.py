@@ -95,6 +95,35 @@ class Changes(unittest.TestCase):
                 shelf.apply(fresh(), op)
             self.assertEqual(e.exception.status, 404)
 
+    def test_portions_are_taken_kept_by_a_copy_and_set(self):
+        s = fresh()
+        self.assertEqual(s['meals'][0]['portions'], 1, 'a meal added without them makes one')
+        s = shelf.apply({'meals': []}, dict(MEAL, portions=3))
+        mid = s['meals'][0]['id']
+        self.assertEqual(s['meals'][0]['portions'], 3)
+        shelf.apply(s, {'op': 'copy', 'id': mid})
+        self.assertEqual(s['meals'][1]['portions'], 3, 'a copy makes as many')
+        shelf.apply(s, {'op': 'portions', 'id': mid, 'portions': 20})
+        self.assertEqual([m['portions'] for m in s['meals']], [20, 3], 'set on the one meal')
+
+    def test_portions_not_a_whole_number_from_one_to_twenty_are_refused(self):
+        for bad in (0, 21, -1, 1.5, 2.0, '3', True, None):
+            with self.assertRaises(shelf.Refused, msg=repr(bad)):
+                shelf.apply({'meals': []}, dict(MEAL, portions=bad))
+            s = fresh()
+            with self.assertRaises(shelf.Refused, msg=repr(bad)):
+                shelf.apply(s, {'op': 'portions', 'id': s['meals'][0]['id'], 'portions': bad})
+            self.assertEqual(s['meals'][0]['portions'], 1)
+        with self.assertRaises(shelf.Refused) as e:
+            shelf.apply(fresh(), {'op': 'portions', 'id': 'm000000000000', 'portions': 2})
+        self.assertEqual(e.exception.status, 404)
+
+    def test_a_stored_meal_without_portions_makes_one(self):
+        good = fresh()['meals'][0]
+        old = {k: v for k, v in good.items() if k != 'portions'}
+        doc = {'meals': [old, dict(good, id='m111111111111', portions=4), dict(good, id='m222222222222', portions=0)]}
+        self.assertEqual([m['portions'] for m in shelf.clean(doc)['meals']], [1, 4, 1])
+
     def test_renaming_a_row_moves_every_meal_in_it_and_only_those(self):
         s = fresh()
         shelf.apply(s, dict(MEAL, name='Oats'))

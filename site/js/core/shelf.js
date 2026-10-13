@@ -14,8 +14,8 @@
     return Array.from(v).length <= max ? v : '';
   }
 
-  // The well-formed meals of a stored shelf, [{ id, name, row, items [{ id, ml }], missing }], in
-  // the shelf's order. A food not known, gone from the table or a food of your own removed or not
+  // The well-formed meals of a stored shelf, [{ id, name, row, items [{ id, ml }], portions, missing }],
+  // in the shelf's order. A meal stored without a count of portions makes 1. A food not known, gone from the table or a food of your own removed or not
   // yet loaded, is left out of `items` and counted in `missing`; a meal left with no food at all
   // is kept while it holds one, so it can still be removed. `byId` maps a food id to its record.
   function clean(doc, byId) {
@@ -34,7 +34,7 @@
         if (!byId[it.id]) missing++;
         return !!byId[it.id];
       }).map(function (it) { return { id: it.id, ml: it.ml }; });
-      if (items.length || missing) out.push({ id: m.id, name: name, row: row, items: items, missing: missing });
+      if (items.length || missing) out.push({ id: m.id, name: name, row: row, items: items, portions: NM.Nutrition.portions(m.portions), missing: missing });
     });
     return out;
   }
@@ -85,8 +85,10 @@
   // Every row name in use, in shelf order.
   function rowNames(meals) { return rows(meals).map(function (r) { return r.name; }); }
 
-  // A meal of the day, [{ id, ml }], with a premade meal's foods added on top: a food already in
-  // it gets the premade amount added to its own, and the rest follow in the premade meal's order.
+  // A meal of the day's rows, [{ id, ml }], with a premade meal's foods added on top: a food already
+  // in it gets the premade amount added to its own, and the rest follow in the premade meal's order.
+  // The whole recipe goes in, whatever portions either makes
+  // (docs/decisions/0027-a-meal-says-how-many-portions-it-makes.md).
   function into(meal, items) {
     var out = meal.map(function (p) { return { id: p.id, ml: p.ml }; });
     items.forEach(function (it) {
@@ -97,6 +99,16 @@
     return out;
   }
 
+  // What one portion of a meal of the day gains from a premade meal: its rows, making `own`
+  // portions. Into puts the whole recipe in a meal making `into` portions, so its rows over `into`;
+  // with no meal to put it into (`into` null), one of its own portions, as New meal gives.
+  function gained(rows, own, into) { return NM.Nutrition.perPortion(rows, into === null ? own : into); }
+
+  // The shelf's meals with meal `id` making `n` portions, as Server/shelf.py's `portions` does it.
+  function withPortions(meals, id, n) {
+    return meals.map(function (m) { return m.id === id ? Object.assign({}, m, { portions: n }) : m; });
+  }
+
   // Whether a premade meal matches a search: its name, its row or one of its foods' names.
   function matches(meal, query, byId) {
     var q = (query || '').trim().toLowerCase();
@@ -105,5 +117,5 @@
     return words.some(function (w) { return w.toLowerCase().indexOf(q) >= 0; });
   }
 
-  NM.Shelf = { NAME_MAX: NAME_MAX, ROW_MAX: ROW_MAX, clean: clean, rows: rows, rowNames: rowNames, place: place, placeRow: placeRow, into: into, matches: matches };
+  NM.Shelf = { NAME_MAX: NAME_MAX, ROW_MAX: ROW_MAX, clean: clean, rows: rows, rowNames: rowNames, place: place, placeRow: placeRow, into: into, gained: gained, withPortions: withPortions, matches: matches };
 })(window.NM = window.NM || {});

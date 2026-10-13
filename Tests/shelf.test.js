@@ -88,6 +88,29 @@
     T.eq(day[0].ml, 100, 'the meal it was given is not changed');
   });
 
+  T.test('Shelf.IntoAddsTheWholeRecipe', function () {
+    var premade = [{ id: 'cod', ml: 600 }, { id: 'oil', ml: 22.5 }];
+    var out = NM.Shelf.into([{ id: 'cod', ml: 100 }], premade);
+    T.eq(JSON.stringify(out), JSON.stringify([{ id: 'cod', ml: 700 }, { id: 'oil', ml: 22.5 }]), 'every row of the recipe, unscaled');
+  });
+
+  T.test('Shelf.TheBandScoresWhatIntoAddsToOnePortion', function () {
+    var rows = [{ id: 'cod', ml: 600 }];
+    T.eq(NM.Shelf.gained(rows, 3, 1)[0].ml, 600, 'a meal of one portion gains the whole recipe');
+    T.eq(NM.Shelf.gained(rows, 3, 2)[0].ml, 300, 'a meal of two gains half of it in each');
+    T.eq(NM.Shelf.gained(rows, 3, null)[0].ml, 200, 'with no meal selected, one of its own portions');
+    T.eq(rows[0].ml, 600, 'the rows it was given are not changed');
+  });
+
+  T.test('Shelf.AMealKeepsItsPortionsAndOneStoredWithoutMakesOne', function () {
+    var out = NM.Shelf.clean({ meals: [
+      Object.assign(meal('a', 'R'), { portions: 3 }), meal('b', 'R'), Object.assign(meal('c', 'R'), { portions: 1.5 })
+    ] }, byId);
+    T.eq(out.map(function (m) { return m.portions; }).join(','), '3,1,1', 'kept, missing or malformed is one');
+    var set = NM.Shelf.withPortions([meal('a', 'R'), meal('b', 'R')], 'b', 4);
+    T.eq(set.map(function (m) { return m.portions || 1; }).join(','), '1,4', 'set on the one meal, as the server does');
+  });
+
   T.test('Shelf.SearchMatchesNameRowOrAFood', function () {
     var m = meal('a', 'Breakfast', 'Berry bowl', [{ id: 'skyr', ml: 200 }, { id: 'strawberries', ml: 200 }]);
     ['berry', 'BREAK', 'strawb', '', '  '].forEach(function (q) { T.ok(NM.Shelf.matches(m, q, byId), q + ' matches'); });

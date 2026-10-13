@@ -18,7 +18,8 @@
       var s = NM.Store.load();
       T.eq(s.target.kcal, NM.Store.DEFAULTS.target.kcal, 'default target');
       T.eq(s.meals.length, 3, 'three meals');
-      T.eq(s.meals[0].length, 0, 'each empty');
+      T.eq(s.meals[0].items.length, 0, 'each empty');
+      T.eq(s.meals[0].portions, 1, 'of one portion');
       T.eq(s.selected, 0, 'the first meal selected');
       NM.Store.save(s); // must not throw
     });
@@ -35,9 +36,9 @@
       T.eq(s.target.protein, NM.Store.DEFAULTS.target.protein, 'string protein rejected');
       T.eq(s.target.fat, 30, 'valid fat kept');
       T.eq(s.meals.length, 2, 'both saved meals kept');
-      T.eq(s.meals[0].length, 1, 'only the first well-formed entry survives: no zero, text or repeated id');
-      T.eq(s.meals[0][0].ml, 15, 'the first oil entry is kept');
-      T.eq(s.meals[1].length, 0, 'a meal that is not a list is empty');
+      T.eq(s.meals[0].items.length, 1, 'only the first well-formed entry survives: no zero, text or repeated id');
+      T.eq(s.meals[0].items[0].ml, 15, 'the first oil entry is kept');
+      T.eq(s.meals[1].items.length, 0, 'a meal that is not a list is empty');
       T.eq(s.selected, 1, 'a valid selection is kept');
       T.eq(s.view.colours, 'day', 'colours default to the day');
     });
@@ -74,6 +75,23 @@
     });
   });
 
+  T.test('Store.AMealKeepsItsPortionsAndOneSavedAsAListMakesOne', function () {
+    withStorage(saved({ meals: [
+      { items: [{ id: 'cod', ml: 600 }], portions: 3 },
+      [{ id: 'oil', ml: 15 }],
+      { items: [{ id: 'cod', ml: 0 }, { id: 'tuna', ml: 100 }], portions: 0 },
+      { items: 'x', portions: 2.5 }, { portions: 21 }, { portions: '3' }, null
+    ] }), function () {
+      var s = NM.Store.load();
+      T.eq(s.meals.length, 7, 'every saved meal kept');
+      T.eq(s.meals[0].portions + '/' + s.meals[0].items[0].ml, '3/600', 'portions and the whole recipe kept');
+      T.eq(s.meals[1].portions + '/' + s.meals[1].items[0].id, '1/oil', 'a meal saved as a list of rows makes one');
+      T.eq(s.meals[2].items.length + '/' + s.meals[2].portions, '1/1', 'its rows checked as before, zero portions is one');
+      T.eq(s.meals.slice(3).map(function (m) { return m.items.length + ':' + m.portions; }).join(','), '0:1,0:1,0:1,0:1',
+        'half, too many, text or no meal at all is an empty meal of one');
+    });
+  });
+
   T.test('Store.AV1PlateBecomesTheFirstMealAndItsTargetIsDropped', function () {
     var v1 = JSON.stringify({ target: { kcal: 600, protein: 45 }, plate: [{ id: 'oil', ml: 15 }, { id: 'cod', ml: 0 }] });
     withStorage(function () {
@@ -81,9 +99,10 @@
     }, function () {
       var s = NM.Store.load();
       T.eq(s.meals.length, 3, 'still three meals');
-      T.eq(s.meals[0].length, 1, 'the plate, validated, is the first meal');
-      T.eq(s.meals[0][0].id, 'oil', 'the oil row');
-      T.eq(s.meals[1].length, 0, 'the other meals are empty');
+      T.eq(s.meals[0].items.length, 1, 'the plate, validated, is the first meal');
+      T.eq(s.meals[0].items[0].id, 'oil', 'the oil row');
+      T.eq(s.meals[0].portions, 1, 'of one portion');
+      T.eq(s.meals[1].items.length, 0, 'the other meals are empty');
       T.eq(s.target.kcal, NM.Store.DEFAULTS.target.kcal, 'a meal target is not taken as a daily one');
     });
   });

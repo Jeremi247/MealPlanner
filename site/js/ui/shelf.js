@@ -41,7 +41,7 @@
     return list;
   }
 
-  // ml, ml per 100 kcal and kcal; grams of each macro; then a tube each, full at one meal's share.
+  // One portion's ml, ml per 100 kcal and kcal; grams of each macro; then a tube each, full at one meal's share.
   function numbers(t, share) {
     var foot = el('div', 'shelf-card-nums');
     var line = el('div', 'shelf-card-line');
@@ -128,7 +128,7 @@
   function press(e, kind, item, ctx) {
     var onGrip = e.target.closest('.shelf-grip');
     if (drag || e.button !== 0 || !ctx.online) return;
-    if (!onGrip && (e.pointerType !== 'mouse' || e.target.closest('button, input, a'))) return;
+    if (!onGrip && (e.pointerType !== 'mouse' || e.target.closest('button, input, a, label'))) return;
     drag = {
       kind: kind, item: item, ctx: ctx, root: item.closest('.shelf-body'), pointer: e.pointerId,
       x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, live: false,
@@ -296,9 +296,18 @@
     c.addEventListener('dragstart', function (e) { e.preventDefault(); });
     c.appendChild(el('h4', 'shelf-card-name', m.name));
     c.appendChild(band(fit));
+    // How many portions the recipe makes; set on the server, so not while it cannot be reached.
+    var n = m.portions;
+    var portions = NM.Portions.stepper(n, 'shelf-portions:' + m.id, '“' + m.name + '”', !ctx.online,
+      function (v) { ctx.onPortions(m, v); });
+    if (!ctx.online) portions.title = 'The shelf cannot be reached';
+    c.appendChild(portions);
+    c.appendChild(el('div', 'shelf-foods-cap', n === 1 ? 'Makes one portion' : 'The recipe, for ' + n));
     c.appendChild(foods(entry, ctx.icons));
 
+    // The numbers are one portion's.
     var foot = el('div', 'shelf-card-foot');
+    foot.appendChild(NM.Portions.caption(n, 'The whole meal'));
     foot.appendChild(numbers(entry.totals, ctx.share));
     var into = el('button', 'shelf-card-into', ctx.into ? 'Into ' + ctx.into : 'Select a meal');
     into.type = 'button';
@@ -306,7 +315,8 @@
     // A meal whose every food is not found has nothing to put in.
     var empty = !entry.items.length;
     into.disabled = !ctx.into || empty;
-    into.title = empty ? 'None of its foods is found' : ctx.into ? 'Add these foods to ' + ctx.into : 'Select a meal to put this into';
+    into.title = empty ? 'None of its foods is found' : !ctx.into ? 'Select a meal to put this into'
+      : 'Add the whole meal to ' + ctx.into;
     into.addEventListener('click', function () { ctx.onInto(m); });
     foot.appendChild(into);
 
@@ -323,10 +333,10 @@
     return c;
   }
 
-  // `ctx`: { rows [{ name, entries [{ meal, items [{food, ml}], totals, fit }] }], total (meals on the
-  // shelf, before the search), query, online, note (a line on the shelf's state, or ''), into (the
-  // selected meal's name, or null for the day), share (one meal's share of the target), icons,
-  // onInto(meal), onNewMeal(meal), onRename(meal, button), onCopy(meal), onRemove(meal, button),
+  // `ctx`: { rows [{ name, entries [{ meal, items [{food, ml}] (the whole recipe), totals (one portion's),
+  // fit }] }], total (meals on the shelf, before the search), query, online, note (a line on the
+  // shelf's state, or ''), into (the selected meal's name, or null for the day), share (one meal's share of the target), icons, onInto(meal), onNewMeal(meal),
+  // onPortions(meal, count), onRename(meal, button), onCopy(meal), onRemove(meal, button),
   // onRenameRow(name, button), onPlace(meal, row, before: a meal's id or null),
   // onPlaceRow(name, before: a row's name or null), onNewRow(meal, anchor) }.
   function render(root, ctx) {

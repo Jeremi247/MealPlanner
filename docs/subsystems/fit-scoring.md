@@ -5,11 +5,11 @@ Scope: `site/js/core/fit.js` — how each tile's colour is computed from the day
 ## Inputs
 
 - The **target**: kcal, protein, fat, carbs and volume for one day.
-- The **day**: every meal's rows together, `[{ food, ml }]`, summed by `Nutrition.totals`. In this doc "the plate" is that sum.
+- The **day**: one portion of every meal's rows together, `[{ food, ml }]`, summed by `Nutrition.totals`: each row divided by the portions its meal makes ([0027](../decisions/0027-a-meal-says-how-many-portions-it-makes.md)). In this doc "the plate" is that sum.
 - The **number of meals**. `Fit.mealShare(target, meals)` is one meal's share, the target divided evenly.
-- With **selection colours**, the selected meal's rows stand in for the day and its share for the target, with one meal. Everything below applies unchanged.
+- With **selection colours**, one portion of the selected meal stands in for the day and its share for the target, with one meal. Everything below applies unchanged.
 - Each candidate food at its **default portion** — what one click would add.
-- Or a **premade meal** from the shelf, its foods summed and scored as one addition by `Fit.scoreMeal`, on the same scale and against the same day or meal ([shelf](shelf.md)).
+- Or a **premade meal** from the shelf, what Into would add to one portion of the selected meal, or one portion of the premade meal with the day selected, summed and scored as one addition by `Fit.scoreMeal`, on the same scale and against the same day or meal ([shelf](shelf.md)).
 
 ## Dimensions
 

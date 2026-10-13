@@ -55,7 +55,7 @@
   // Estimated weight of `ml` of a food, in grams.
   function grams(food, ml) { return food.gPerMl * ml; }
 
-  // Estimated weight of `ml` of a food before boiling, in grams, or null for a food without one.
+  // Estimated weight of `ml` of a food before cooking, in grams, or null for a food without one.
   function rawGrams(food, ml) { return food.raw ? grams(food, ml) * food.raw.perG : null; }
 
   // How many of a portion food's units `ml` holds, or null for a food measured in ml.
@@ -85,6 +85,19 @@
     return items.reduce(function (t, it) { return add(t, amount(it.food, it.ml)); }, zero());
   }
 
+  // The most portions a meal can make (docs/decisions/0027-a-meal-says-how-many-portions-it-makes.md).
+  // Server/shelf.py holds a premade meal to the same.
+  var PORTIONS_MAX = 20;
+
+  // `v` if it is a whole number of portions a meal can make, else 1.
+  function portions(v) { return typeof v === 'number' && v % 1 === 0 && v >= 1 && v <= PORTIONS_MAX ? v : 1; }
+
+  // One portion of a meal's rows: each row's ml divided by the portions it makes. Rows are
+  // [{ food, ml }] or [{ id, ml }], and are not changed.
+  function perPortion(items, n) {
+    return items.map(function (it) { return Object.assign({}, it, { ml: it.ml / n }); });
+  }
+
   // Satiety density: how much volume 100 kcal of this buys. Infinity for a zero-kcal food.
   function mlPer100Kcal(kcalPerMl) { return kcalPerMl > 0 ? 100 / kcalPerMl : Infinity; }
 
@@ -96,6 +109,6 @@
 
   NM.Nutrition = {
     NUTRIENTS: NUTRIENTS, mid: mid, normalise: normalise, amount: amount, grams: grams, rawGrams: rawGrams, units: units, stepped: stepped, mlFromGrams: mlFromGrams, zero: zero, add: add,
-    totals: totals, mlPer100Kcal: mlPer100Kcal, vsBaseline: vsBaseline
+    totals: totals, PORTIONS_MAX: PORTIONS_MAX, portions: portions, perPortion: perPortion, mlPer100Kcal: mlPer100Kcal, vsBaseline: vsBaseline
   };
 })(window.NM = window.NM || {});

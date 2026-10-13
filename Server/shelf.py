@@ -24,6 +24,9 @@ ROW_MAX = 40
 ITEMS_MAX = 60
 MEALS_MAX = 1000
 ML_MAX = 20000
+# The most portions a meal makes, as site/js/core/nutrition.js holds it
+# (docs/decisions/0027-a-meal-says-how-many-portions-it-makes.md).
+PORTIONS_MAX = 20
 BODY_MAX = 64 * 1024
 FOOD_ID = re.compile(r'^[a-z0-9-]{1,40}$')
 MEAL_ID = re.compile(r'^m[0-9a-f]{12}$')
@@ -114,6 +117,13 @@ def items(value):
     return out
 
 
+def portions(value):
+    """`value` if it is a whole number of portions from 1 to PORTIONS_MAX."""
+    if isinstance(value, bool) or not isinstance(value, int) or not 1 <= value <= PORTIONS_MAX:
+        raise Refused('portions is not a whole number from 1 to ' + str(PORTIONS_MAX))
+    return value
+
+
 def grouped(meals):
     """`meals` with each row's meals together, the rows in the order they first appear.
     The order of the list is the order the shelf shows."""
@@ -138,14 +148,19 @@ def clean_foods(doc):
 
 
 def clean(doc):
-    """The well-formed meals of a stored shelf, grouped by row; anything malformed is dropped."""
+    """The well-formed meals of a stored shelf, grouped by row; anything malformed is dropped. A meal
+    stored without a well-formed count of portions makes 1."""
     meals = []
     for m in (doc.get('meals') if isinstance(doc, dict) else None) or []:
         try:
             if not isinstance(m, dict) or not isinstance(m.get('id'), str) or not MEAL_ID.match(m['id']):
                 continue
+            try:
+                count = portions(m.get('portions'))
+            except Refused:
+                count = 1
             meals.append({'id': m['id'], 'name': text(m.get('name'), NAME_MAX, 'name'),
-                          'row': text(m.get('row'), ROW_MAX, 'row'), 'items': items(m.get('items'))})
+                          'row': text(m.get('row'), ROW_MAX, 'row'), 'items': items(m.get('items')), 'portions': count})
         except Refused:
             continue
     return {'meals': grouped(meals)}
@@ -188,16 +203,20 @@ def apply(shelf, op):
         raise Refused('the shelf is full', 409)
     if kind == 'add':
         row = text(op.get('row'), ROW_MAX, 'row')
-        meal = {'id': new_id(shelf), 'name': text(op.get('name'), NAME_MAX, 'name'), 'row': row, 'items': items(op.get('items'))}
+        meal = {'id': new_id(shelf), 'name': text(op.get('name'), NAME_MAX, 'name'), 'row': row, 'items': items(op.get('items')),
+                'portions': portions(op['portions']) if 'portions' in op else 1}
         # First in its row, or a new row at the end.
         meals.insert(next((i for i, m in enumerate(meals) if m['row'] == row), len(meals)), meal)
     elif kind == 'copy':
         i = find(meals, op.get('id'))
         src = meals[i]
         name = text(src['name'] + ' (copy)', NAME_MAX + 7, 'name')[:NAME_MAX]
-        meals.insert(i + 1, {'id': new_id(shelf), 'name': name, 'row': src['row'], 'items': [dict(it) for it in src['items']]})
+        meals.insert(i + 1, {'id': new_id(shelf), 'name': name, 'row': src['row'], 'items': [dict(it) for it in src['items']],
+                             'portions': src.get('portions', 1)})
     elif kind == 'rename':
         meals[find(meals, op.get('id'))]['name'] = text(op.get('name'), NAME_MAX, 'name')
+    elif kind == 'portions':
+        meals[find(meals, op.get('id'))]['portions'] = portions(op.get('portions'))
     elif kind == 'place':
         meal = meals.pop(find(meals, op.get('id')))
         meal['row'] = text(op.get('row'), ROW_MAX, 'row')
